@@ -4,15 +4,15 @@ import { MoreThanOrEqual } from 'typeorm';
 import { updateSingleUser } from '../../../lib/api';
 import { getDb } from '../../../lib/db';
 import { User } from '../../../lib/entities/User';
-import { validateBitcoinAddress } from '../../../utils/validateBitcoinAddress';
+import { validateBitFiniteAddress } from '../../../utils/validateBitFiniteAddress';
 
 export async function POST(request: Request) {
   try {
     const { address } = await request.json();
 
-    if (!validateBitcoinAddress(address)) {
+    if (!validateBitFiniteAddress(address)) {
       return NextResponse.json(
-        { error: 'Invalid Bitcoin address' },
+        { error: 'Invalid BitFinite address' },
         { status: 400 }
       );
     }
@@ -77,7 +77,7 @@ export async function POST(request: Request) {
     // Check for unique constraint violation
     if (error.code === '23505' && error.detail?.includes('address')) {
       return NextResponse.json(
-        { error: 'Bitcoin address already exists' },
+        { error: 'BitFinite address already exists' },
         { status: 409 }
       );
     }

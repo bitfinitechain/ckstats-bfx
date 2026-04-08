@@ -1,17 +1,24 @@
 import './globals.css';
 import { Metadata } from 'next';
-import { Lato } from 'next/font/google';
+import { Inter, Roboto_Mono } from 'next/font/google';
 
 import Footer from '../components/Footer';
 import Header from '../components/Header';
 import Providers from '../components/Providers';
 
-const lato = Lato({ subsets: ['latin'], weight: ['400', '700'] });
+const inter = Inter({
+  variable: '--font-geist-sans',
+  subsets: ['latin'],
+});
+
+const robotoMono = Roboto_Mono({
+  variable: '--font-geist-mono',
+  subsets: ['latin'],
+});
 
 export const metadata: Metadata = {
-  title: 'CKstats',
-  description:
-    'Real-time and historical statistics for the CKPool Bitcoin mining pool using data from their API.',
+  title: 'BitFinite Ckpool Stats',
+  description: 'Real-time and historical statistics for the BitFinite Ckpool.',
 };
 
 export default function RootLayout({
@@ -21,7 +28,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={lato.className}>
+      <body
+        className={`${inter.variable} ${robotoMono.variable} antialiased bg-background text-foreground`}
+      >
         <Providers>
           <div className="flex flex-col min-h-screen">
             <Header />

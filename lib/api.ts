@@ -188,7 +188,7 @@ export async function resetUserActive(address: string): Promise<void> {
 
 export async function updateSingleUser(address: string): Promise<void> {
   // Perform a last minute check to prevent directory traversal vulnerabilities
-  if (/[^a-zA-Z0-9]/.test(address)) {
+  if (/[^a-zA-Z0-9:]/.test(address)) {
     throw new Error('updateSingleUser(): address contains invalid characters');
   }
 

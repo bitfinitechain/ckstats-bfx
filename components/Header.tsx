@@ -3,11 +3,12 @@
 import { useState, useRef } from 'react';
 
 import { useMutation } from '@tanstack/react-query';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 import ThemeController from './ThemeController';
-import { validateBitcoinAddress } from '../utils/validateBitcoinAddress';
+import { validateBitFiniteAddress } from '../utils/validateBitFiniteAddress';
 
 export default function Header() {
   const [address, setAddress] = useState('');
@@ -60,8 +61,8 @@ export default function Header() {
 
   const handleAddAddress = async () => {
     const trimmedAddress = address.trim();
-    if (!validateBitcoinAddress(trimmedAddress)) {
-      setModalMessage('Invalid Bitcoin address');
+    if (!validateBitFiniteAddress(trimmedAddress)) {
+      setModalMessage('Invalid BitFinite address');
       setIsError(true);
       modalRef.current?.showModal();
       return;
@@ -71,17 +72,28 @@ export default function Header() {
   };
 
   return (
-    <header className="navbar bg-base-100">
+    <header className="navbar sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex-1 hidden md:inline-flex">
-        <Link href="/" className="btn btn-ghost normal-case text-xl">
-          CKPool Stats
+        <Link
+          href="/"
+          className="btn btn-ghost normal-case text-xl flex items-center gap-2"
+        >
+          <div className="relative w-8 h-8">
+            <Image
+              src="/icon.png"
+              alt="BitFinite Logo"
+              fill
+              className="object-contain"
+            />
+          </div>
+          BitFinite Solo Pool
         </Link>
       </div>
       <div className="flex-none gap-1 sm:gap-2 flex-grow md:flex-grow-0">
         <div className="form-control flex-grow md:flex-grow-0">
           <input
             type="text"
-            placeholder="Enter Bitcoin address"
+            placeholder="Enter BitFinite address"
             className="input input-bordered w-full md:w-96 text-sm"
             value={address}
             onChange={(e) => setAddress(e.target.value.trim())}
@@ -93,21 +105,8 @@ export default function Header() {
             }}
           />
         </div>
-        <button className="btn p-3 btn-primary" onClick={handleAddAddress}>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            />
-          </svg>
+        <button className="btn btn-primary" onClick={handleAddAddress}>
+          Add
         </button>
         <ThemeController />
       </div>

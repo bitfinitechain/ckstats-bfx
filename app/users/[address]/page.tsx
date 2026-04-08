@@ -100,7 +100,7 @@ export default async function UserPage({
   return (
     <div className="container mx-auto p-4">
       <div className="flex flex-col md:flex-row justify-between gap-2 mb-4">
-        <h1 className="text-2xl font-bold break-words text-accent">
+        <h1 className="text-2xl font-bold break-words text-foreground">
           {user.address}
         </h1>
         <PrivacyToggle address={user.address} initialIsPublic={user.isPublic} />

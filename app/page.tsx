@@ -1,17 +1,24 @@
-export const revalidate = 60;
-
-import PoolStatsChart from '../components/PoolStatsChart';
-import PoolStatsDisplay from '../components/PoolStatsDisplay';
-import TopUserDifficulties from '../components/TopUserDifficulties';
-import TopUserHashrates from '../components/TopUserHashrates';
-import { getLatestPoolStats, getHistoricalPoolStats } from '../lib/api';
+import Dashboard from '../components/Dashboard';
+import {
+  getLatestPoolStats,
+  getHistoricalPoolStats,
+  getTopUserDifficulties,
+  getTopUserHashrates,
+} from '../lib/api';
 import { serializeData } from '../utils/helpers';
 
 export default async function Home() {
   try {
-    const [latestStatsORM, historicalStatsORM] = await Promise.all([
+    const [
+      latestStatsORM,
+      historicalStatsORM,
+      topDifficultiesORM,
+      topHashratesORM,
+    ] = await Promise.all([
       getLatestPoolStats(),
       getHistoricalPoolStats(),
+      getTopUserDifficulties(),
+      getTopUserHashrates(),
     ]);
 
     if (!latestStatsORM) {
@@ -22,26 +29,14 @@ export default async function Home() {
       );
     }
 
-    const latestStats = serializeData(latestStatsORM);
-    const historicalStats = serializeData(historicalStatsORM);
+    const initialData = {
+      latestStats: serializeData(latestStatsORM),
+      historicalStats: serializeData(historicalStatsORM),
+      topDifficulties: serializeData(topDifficultiesORM),
+      topHashrates: serializeData(topHashratesORM),
+    };
 
-    return (
-      <main className="container mx-auto p-4">
-        <PoolStatsDisplay
-          stats={latestStats}
-          historicalStats={historicalStats}
-        />
-        {historicalStats && historicalStats.length > 0 ? (
-          <PoolStatsChart data={historicalStats} />
-        ) : (
-          <p>Historical data is not available.</p>
-        )}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
-          <TopUserDifficulties />
-          <TopUserHashrates />
-        </div>
-      </main>
-    );
+    return <Dashboard initialData={initialData} />;
   } catch (error) {
     console.error('Error fetching pool stats:', error);
     return (

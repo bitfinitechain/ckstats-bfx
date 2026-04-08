@@ -14,7 +14,6 @@ export default function CountdownTimer({
       setSeconds((prevSeconds) => {
         if (prevSeconds <= 1) {
           clearInterval(timer);
-          window.location.reload();
           return 0;
         }
         return prevSeconds - 1;

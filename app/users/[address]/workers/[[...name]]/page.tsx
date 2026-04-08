@@ -72,7 +72,7 @@ export default async function WorkerPage({
           </svg>
           Back to User
         </Link>
-        <h1 className="text-3xl font-bold text-accent">
+        <h1 className="text-3xl font-bold text-foreground">
           {worker.name || <span className="italic">Unnamed Worker</span>}
         </h1>
       </div>

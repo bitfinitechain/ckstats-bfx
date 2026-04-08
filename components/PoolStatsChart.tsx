@@ -2,9 +2,10 @@
 
 import { useState } from 'react';
 
+import { Users, Activity, Zap } from 'lucide-react';
 import {
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   Tooltip,
@@ -12,6 +13,7 @@ import {
   ResponsiveContainer,
   LegendType,
   Brush,
+  CartesianGrid,
 } from 'recharts';
 
 import { PoolStats } from '../lib/entities/PoolStats';
@@ -39,94 +41,38 @@ export default function PoolStatsChart({ data }: PoolStatsChartProps) {
   const legendPayload = [
     {
       value: '1m',
-      type: 'line',
+      type: 'rect',
       color: visibleLines['1m'] ? '#8884d8' : '#aaaaaa',
-      formatter: (value: string) =>
-        visibleLines['1m'] ? (
-          <span style={{ cursor: 'pointer' }}>{value}</span>
-        ) : (
-          <span style={{ fontStyle: 'italic', cursor: 'pointer' }}>
-            {value}
-          </span>
-        ),
     },
     {
       value: '5m',
-      type: 'line',
+      type: 'rect',
       color: visibleLines['5m'] ? '#82ca9d' : '#aaaaaa',
-      formatter: (value: string) =>
-        visibleLines['5m'] ? (
-          <span style={{ cursor: 'pointer' }}>{value}</span>
-        ) : (
-          <span style={{ fontStyle: 'italic', cursor: 'pointer' }}>
-            {value}
-          </span>
-        ),
     },
     {
       value: '15m',
-      type: 'line',
+      type: 'rect',
       color: visibleLines['15m'] ? '#ffc658' : '#aaaaaa',
-      formatter: (value: string) =>
-        visibleLines['15m'] ? (
-          <span style={{ cursor: 'pointer' }}>{value}</span>
-        ) : (
-          <span style={{ fontStyle: 'italic', cursor: 'pointer' }}>
-            {value}
-          </span>
-        ),
     },
     {
       value: '1hr',
-      type: 'line',
+      type: 'rect',
       color: visibleLines['1hr'] ? '#ff7300' : '#aaaaaa',
-      formatter: (value: string) =>
-        visibleLines['1hr'] ? (
-          <span style={{ cursor: 'pointer' }}>{value}</span>
-        ) : (
-          <span style={{ fontStyle: 'italic', cursor: 'pointer' }}>
-            {value}
-          </span>
-        ),
     },
     {
       value: '6hr',
-      type: 'line',
+      type: 'rect',
       color: visibleLines['6hr'] ? '#00C49F' : '#aaaaaa',
-      formatter: (value: string) =>
-        visibleLines['6hr'] ? (
-          <span style={{ cursor: 'pointer' }}>{value}</span>
-        ) : (
-          <span style={{ fontStyle: 'italic', cursor: 'pointer' }}>
-            {value}
-          </span>
-        ),
     },
     {
       value: '1d',
-      type: 'line',
+      type: 'rect',
       color: visibleLines['1d'] ? '#0088FE' : '#aaaaaa',
-      formatter: (value: string) =>
-        visibleLines['1d'] ? (
-          <span style={{ cursor: 'pointer' }}>{value}</span>
-        ) : (
-          <span style={{ fontStyle: 'italic', cursor: 'pointer' }}>
-            {value}
-          </span>
-        ),
     },
     {
       value: '7d',
-      type: 'line',
+      type: 'rect',
       color: visibleLines['7d'] ? '#FF1493' : '#aaaaaa',
-      formatter: (value: string) =>
-        visibleLines['7d'] ? (
-          <span style={{ cursor: 'pointer' }}>{value}</span>
-        ) : (
-          <span style={{ fontStyle: 'italic', cursor: 'pointer' }}>
-            {value}
-          </span>
-        ),
     },
   ];
 
@@ -182,241 +128,387 @@ export default function PoolStatsChart({ data }: PoolStatsChartProps) {
     name,
   ];
 
+  const renderGradientDefs = () => (
+    <defs>
+      <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="5%" stopColor="#0644f1" stopOpacity={0.2} />
+        <stop offset="95%" stopColor="#0644f1" stopOpacity={0} />
+      </linearGradient>
+      <linearGradient id="colorWorkers" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="5%" stopColor="#3abff8" stopOpacity={0.2} />
+        <stop offset="95%" stopColor="#3abff8" stopOpacity={0} />
+      </linearGradient>
+      {/* Add more gradients if needed for hashrates/SPS, mostly reusing colors or specific ones */}
+    </defs>
+  );
+
   const renderUsersChart = () => (
-    <div className="h-80 w-full mb-8">
-      <h2 className="text-xl font-bold mb-2">Users and Workers</h2>
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart
-          data={formattedData}
-          margin={{ top: 5, right: 0, left: 0, bottom: 5 }}
-        >
-          <XAxis dataKey="timestamp" minTickGap={40} />
-          <YAxis
-            yAxisId="left"
-            allowDataOverflow={true}
-            domain={[
-              (dataMin: number) => Math.floor(dataMin * 0.99),
-              (dataMax: number) => Math.ceil(dataMax * 1.01),
-            ]}
-          />
-          <YAxis
-            yAxisId="right"
-            orientation="right"
-            allowDataOverflow={true}
-            domain={[
-              (dataMin: number) => Math.floor(dataMin * 0.99),
-              (dataMax: number) => Math.ceil(dataMax * 1.01),
-            ]}
-          />
-          <Tooltip />
-          <Legend />
-          <Brush
-            dataKey="timestamp"
-            height={30}
-            alwaysShowText={true}
-            startIndex={
-              formattedData.length - 1440 > 0 ? formattedData.length - 1440 : 0
-            }
-          />
-          <Line
-            yAxisId="left"
-            type="monotone"
-            dataKey="users"
-            stroke="#8884d8"
-            activeDot={{ r: 8 }}
-            name="Users"
-            dot={false}
-            isAnimationActive={false}
-          />
-          <Line
-            yAxisId="right"
-            type="monotone"
-            dataKey="workers"
-            stroke="#82ca9d"
-            activeDot={{ r: 8 }}
-            name="Workers"
-            dot={false}
-            isAnimationActive={false}
-          />
-        </LineChart>
-      </ResponsiveContainer>
+    <div className="mb-8 w-full rounded-xl border border-border bg-card p-6 shadow-sm">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+          <span className="p-1 rounded-md bg-primary/10 text-primary">
+            <Users size={20} />
+          </span>
+          Users and Workers
+        </h2>
+      </div>
+      <div className="h-80 w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart
+            data={formattedData}
+            margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+          >
+            {renderGradientDefs()}
+            <CartesianGrid
+              strokeDasharray="3 3"
+              vertical={false}
+              stroke="var(--border)"
+              opacity={0.4}
+            />
+            <XAxis
+              dataKey="timestamp"
+              minTickGap={40}
+              stroke="var(--muted-foreground)"
+              fontSize={12}
+              tickLine={false}
+              axisLine={false}
+              tickMargin={10}
+            />
+            <YAxis
+              yAxisId="left"
+              allowDataOverflow={true}
+              domain={['auto', 'auto']}
+              stroke="var(--muted-foreground)"
+              fontSize={12}
+              tickLine={false}
+              axisLine={false}
+              tickMargin={10}
+            />
+            <YAxis
+              yAxisId="right"
+              orientation="right"
+              allowDataOverflow={true}
+              domain={['auto', 'auto']}
+              stroke="var(--muted-foreground)"
+              fontSize={12}
+              tickLine={false}
+              axisLine={false}
+              tickMargin={10}
+            />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: 'var(--card)',
+                borderColor: 'var(--border)',
+                borderRadius: '12px',
+                boxShadow:
+                  '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+              }}
+              itemStyle={{ color: 'var(--card-foreground)' }}
+            />
+            <Legend wrapperStyle={{ paddingTop: '20px' }} />
+            <Brush
+              dataKey="timestamp"
+              height={30}
+              alwaysShowText={false}
+              startIndex={
+                formattedData.length - 1440 > 0
+                  ? formattedData.length - 1440
+                  : 0
+              }
+              stroke="var(--primary)"
+              fill="var(--background)"
+              tickFormatter={() => ''}
+            />
+            <Area
+              yAxisId="left"
+              type="monotone"
+              dataKey="users"
+              stroke="#0644f1"
+              fillOpacity={1}
+              fill="url(#colorUsers)"
+              name="Users"
+              strokeWidth={2}
+            />
+            <Area
+              yAxisId="right"
+              type="monotone"
+              dataKey="workers"
+              stroke="#3abff8"
+              fillOpacity={1}
+              fill="url(#colorWorkers)"
+              name="Workers"
+              strokeWidth={2}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 
   const renderHashrateChart = () => (
-    <div className="h-80 w-full mb-8">
-      <h2 className="text-xl font-bold mb-2">
-        Hashrate ({hashrateUnit.iso}H/s)
-      </h2>
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart
-          data={formattedData}
-          margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
-        >
-          <XAxis dataKey="timestamp" minTickGap={40} />
-          <YAxis
-            allowDataOverflow={true}
-            domain={[
-              (dataMin: number) => Math.floor(dataMin * 0.99),
-              (dataMax: number) => Math.ceil(dataMax * 1.01),
-            ]}
-          />
-          <Tooltip formatter={hashrateTooltipFormatter} />
-          <Legend
-            payload={legendPayload.map((item) => ({
-              ...item,
-              type: item.type as LegendType,
-            }))}
-            onClick={(e) => handleLegendClick(e.value)}
-          />
-          <Brush
-            dataKey="timestamp"
-            height={30}
-            alwaysShowText={true}
-            startIndex={
-              formattedData.length - 1440 > 0 ? formattedData.length - 1440 : 0
-            }
-          />
-          {visibleLines['1m'] && (
-            <Line
-              type="monotone"
-              dataKey="hashrate1m"
-              name="1M"
-              stroke="#8884d8"
-              dot={false}
-              isAnimationActive={false}
+    <div className="mb-8 w-full rounded-xl border border-border bg-card p-6 shadow-sm">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+          <span className="p-1 rounded-md bg-primary/10 text-primary">
+            <Activity size={20} />
+          </span>
+          Hashrate ({hashrateUnit.iso}H/s)
+        </h2>
+      </div>
+      <div className="h-80 w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart
+            data={formattedData}
+            margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+          >
+            <CartesianGrid
+              strokeDasharray="3 3"
+              vertical={false}
+              stroke="var(--border)"
+              opacity={0.4}
             />
-          )}
-          {visibleLines['5m'] && (
-            <Line
-              type="monotone"
-              dataKey="hashrate5m"
-              name="5M"
-              stroke="#82ca9d"
-              dot={false}
-              isAnimationActive={false}
+            <XAxis
+              dataKey="timestamp"
+              minTickGap={40}
+              stroke="var(--muted-foreground)"
+              fontSize={12}
+              tickLine={false}
+              axisLine={false}
+              tickMargin={10}
             />
-          )}
-          {visibleLines['15m'] && (
-            <Line
-              type="monotone"
-              dataKey="hashrate15m"
-              name="15M"
-              stroke="#ffc658"
-              dot={false}
-              isAnimationActive={false}
+            <YAxis
+              allowDataOverflow={true}
+              domain={['auto', 'auto']}
+              stroke="var(--muted-foreground)"
+              fontSize={12}
+              tickLine={false}
+              axisLine={false}
+              tickMargin={10}
             />
-          )}
-          {visibleLines['1hr'] && (
-            <Line
-              type="monotone"
-              dataKey="hashrate1hr"
-              name="1HR"
-              stroke="#ff7300"
-              dot={false}
-              isAnimationActive={false}
+            <Tooltip
+              formatter={hashrateTooltipFormatter}
+              contentStyle={{
+                backgroundColor: 'var(--card)',
+                borderColor: 'var(--border)',
+                borderRadius: '12px',
+                boxShadow:
+                  '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+              }}
+              itemStyle={{ color: 'var(--card-foreground)' }}
             />
-          )}
-          {visibleLines['6hr'] && (
-            <Line
-              type="monotone"
-              dataKey="hashrate6hr"
-              name="6HR"
-              stroke="#00C49F"
-              dot={false}
-              isAnimationActive={false}
+            <Legend
+              wrapperStyle={{ paddingTop: '20px' }}
+              payload={legendPayload.map((item) => ({
+                ...item,
+                type: item.type as LegendType,
+              }))}
+              onClick={(e) => handleLegendClick(e.value)}
             />
-          )}
-          {visibleLines['1d'] && (
-            <Line
-              type="monotone"
-              dataKey="hashrate1d"
-              name="1D"
-              stroke="#0088FE"
-              dot={false}
-              isAnimationActive={false}
+            <Brush
+              dataKey="timestamp"
+              height={30}
+              alwaysShowText={false}
+              startIndex={
+                formattedData.length - 1440 > 0
+                  ? formattedData.length - 1440
+                  : 0
+              }
+              stroke="var(--primary)"
+              fill="var(--background)"
+              tickFormatter={() => ''}
             />
-          )}
-          {visibleLines['7d'] && (
-            <Line
-              type="monotone"
-              dataKey="hashrate7d"
-              name="7D"
-              stroke="#FF1493"
-              dot={false}
-              isAnimationActive={false}
-            />
-          )}
-        </LineChart>
-      </ResponsiveContainer>
+            {visibleLines['1m'] && (
+              <Area
+                type="monotone"
+                dataKey="hashrate1m"
+                name="1M"
+                stroke="#8884d8"
+                fill="#8884d8"
+                fillOpacity={0.1}
+                strokeWidth={2}
+              />
+            )}
+            {visibleLines['5m'] && (
+              <Area
+                type="monotone"
+                dataKey="hashrate5m"
+                name="5M"
+                stroke="#82ca9d"
+                fill="#82ca9d"
+                fillOpacity={0.1}
+                strokeWidth={2}
+              />
+            )}
+            {visibleLines['15m'] && (
+              <Area
+                type="monotone"
+                dataKey="hashrate15m"
+                name="15M"
+                stroke="#ffc658"
+                fill="#ffc658"
+                fillOpacity={0.1}
+                strokeWidth={2}
+              />
+            )}
+            {visibleLines['1hr'] && (
+              <Area
+                type="monotone"
+                dataKey="hashrate1hr"
+                name="1HR"
+                stroke="#ff7300"
+                fill="#ff7300"
+                fillOpacity={0.1}
+                strokeWidth={2}
+              />
+            )}
+            {visibleLines['6hr'] && (
+              <Area
+                type="monotone"
+                dataKey="hashrate6hr"
+                name="6HR"
+                stroke="#00C49F"
+                fill="#00C49F"
+                fillOpacity={0.1}
+                strokeWidth={2}
+              />
+            )}
+            {visibleLines['1d'] && (
+              <Area
+                type="monotone"
+                dataKey="hashrate1d"
+                name="1D"
+                stroke="#0088FE"
+                fill="#0088FE"
+                fillOpacity={0.1}
+                strokeWidth={2}
+              />
+            )}
+            {visibleLines['7d'] && (
+              <Area
+                type="monotone"
+                dataKey="hashrate7d"
+                name="7D"
+                stroke="#FF1493"
+                fill="#FF1493"
+                fillOpacity={0.1}
+                strokeWidth={2}
+              />
+            )}
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 
   const renderSPSChart = () => (
-    <div className="h-80 w-full mb-8">
-      <h2 className="text-xl font-bold mb-2">Shares Per Second</h2>
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart
-          data={formattedData}
-          margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
-        >
-          <XAxis dataKey="timestamp" minTickGap={40} />
-          <YAxis
-            allowDataOverflow={true}
-            domain={[
-              (dataMin: number) => Math.floor(dataMin * 0.99),
-              (dataMax: number) => Math.ceil(dataMax * 1.01),
-            ]}
-          />
-          <Tooltip formatter={spsTooltipFormatter} />
-          <Legend />
-          <Brush
-            dataKey="timestamp"
-            height={30}
-            alwaysShowText={true}
-            startIndex={
-              formattedData.length - 1440 > 0 ? formattedData.length - 1440 : 0
-            }
-          />
-          <Line
-            type="monotone"
-            dataKey="SPS1m"
-            name="1M"
-            stroke="#8884d8"
-            dot={false}
-            isAnimationActive={false}
-          />
-          <Line
-            type="monotone"
-            dataKey="SPS5m"
-            name="5M"
-            stroke="#82ca9d"
-            dot={false}
-            isAnimationActive={false}
-          />
-          <Line
-            type="monotone"
-            dataKey="SPS15m"
-            name="15M"
-            stroke="#ffc658"
-            dot={false}
-            isAnimationActive={false}
-          />
-          <Line
-            type="monotone"
-            dataKey="SPS1h"
-            name="1H"
-            stroke="#ff7300"
-            dot={false}
-            isAnimationActive={false}
-          />
-        </LineChart>
-      </ResponsiveContainer>
+    <div className="mb-8 w-full rounded-xl border border-border bg-card p-6 shadow-sm">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+          <span className="p-1 rounded-md bg-primary/10 text-primary">
+            <Zap size={20} />
+          </span>
+          Shares Per Second
+        </h2>
+      </div>
+      <div className="h-80 w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart
+            data={formattedData}
+            margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+          >
+            <CartesianGrid
+              strokeDasharray="3 3"
+              vertical={false}
+              stroke="var(--border)"
+              opacity={0.4}
+            />
+            <XAxis
+              dataKey="timestamp"
+              minTickGap={40}
+              stroke="var(--muted-foreground)"
+              fontSize={12}
+              tickLine={false}
+              axisLine={false}
+              tickMargin={10}
+            />
+            <YAxis
+              allowDataOverflow={true}
+              domain={['auto', 'auto']}
+              stroke="var(--muted-foreground)"
+              fontSize={12}
+              tickLine={false}
+              axisLine={false}
+              tickMargin={10}
+            />
+            <Tooltip
+              formatter={spsTooltipFormatter}
+              contentStyle={{
+                backgroundColor: 'var(--card)',
+                borderColor: 'var(--border)',
+                borderRadius: '12px',
+                boxShadow:
+                  '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+              }}
+              itemStyle={{ color: 'var(--card-foreground)' }}
+            />
+            <Legend wrapperStyle={{ paddingTop: '20px' }} />
+            <Brush
+              dataKey="timestamp"
+              height={30}
+              alwaysShowText={false}
+              startIndex={
+                formattedData.length - 1440 > 0
+                  ? formattedData.length - 1440
+                  : 0
+              }
+              stroke="var(--primary)"
+              fill="var(--background)"
+              tickFormatter={() => ''}
+            />
+            <Area
+              type="monotone"
+              dataKey="SPS1m"
+              name="1M"
+              stroke="#8884d8"
+              fill="#8884d8"
+              fillOpacity={0.1}
+              strokeWidth={2}
+            />
+            <Area
+              type="monotone"
+              dataKey="SPS5m"
+              name="5M"
+              stroke="#82ca9d"
+              fill="#82ca9d"
+              fillOpacity={0.1}
+              strokeWidth={2}
+            />
+            <Area
+              type="monotone"
+              dataKey="SPS15m"
+              name="15M"
+              stroke="#ffc658"
+              fill="#ffc658"
+              fillOpacity={0.1}
+              strokeWidth={2}
+            />
+            <Area
+              type="monotone"
+              dataKey="SPS1h"
+              name="1H"
+              stroke="#ff7300"
+              fill="#ff7300"
+              fillOpacity={0.1}
+              strokeWidth={2}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 
   return (
-    <div className="mt-4">
+    <div className="mt-8 grid gap-6">
       {renderUsersChart()}
       {renderHashrateChart()}
       {renderSPSChart()}

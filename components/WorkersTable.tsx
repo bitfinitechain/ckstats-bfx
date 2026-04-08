@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 
+import { HardDrive } from 'lucide-react';
 import Link from 'next/link';
 
 import { Worker } from '../lib/entities/Worker';
@@ -54,11 +55,18 @@ const WorkersTable: React.FC<WorkersTableProps> = ({ workers, address }) => {
   };
 
   return (
-    <div className="bg-base-200 p-4 rounded-lg mt-8">
-      <h2 className="text-xl font-bold mb-4">Workers</h2>
+    <div className="bg-card border border-border rounded-xl shadow-sm p-6 mt-8">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+          <span className="p-1 rounded-md bg-primary/10 text-primary">
+            <HardDrive size={20} />
+          </span>
+          Workers
+        </h2>
+      </div>
       <div className="overflow-x-auto">
         <table className="table w-full table-sm sm:table-md">
-          <thead>
+          <thead className="text-muted-foreground text-xs uppercase font-bold">
             <tr>
               <th onClick={() => handleSort('name')} className="cursor-pointer">
                 Name{renderSortIcon('name')}
@@ -101,19 +109,19 @@ const WorkersTable: React.FC<WorkersTableProps> = ({ workers, address }) => {
               </th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="text-foreground text-sm font-medium">
             {sortedWorkers.map((worker) => (
               <tr key={worker.id}>
                 <td>
                   <Link
-                    className="link text-primary"
+                    className="link text-primary no-underline hover:underline"
                     href={`/users/${address}/workers/${encodeURIComponent(worker.name)}`}
                   >
                     {worker.name || <span className="italic">Unnamed</span>}
                   </Link>
                 </td>
                 <td
-                  className={`${Number(worker.hashrate5m) < 1 ? 'text-error' : 'text-accent'}`}
+                  className={`${Number(worker.hashrate5m) < 1 ? 'text-error' : 'text-primary font-bold'}`}
                 >
                   {formatHashrate(worker.hashrate5m)}
                 </td>

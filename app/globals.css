@@ -2,7 +2,68 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Add any global styles below this line */
+/* BitFinite Brand Colors & Variables */
+:root,
+[data-theme='bitfinite-light'] {
+  /* Light Mode Defaults (Matched to BitFinite Explorer) */
+  --background: #ffffff;
+  --foreground: #09090b;
+
+  --card: #f4f4f5;
+  --card-foreground: #09090b;
+
+  /* BitFinite Brand Blue */
+  --primary: #0644f1;
+  --primary-foreground: #ffffff;
+
+  --muted: #d4d4d8;
+  --muted-foreground: #52525b;
+  /* Zinc-600 (Was Zinc-500) - Fixes contrast on Card BG */
+
+  --accent: #f4f4f5;
+  --accent-foreground: #09090b;
+
+  --destructive: #ef4444;
+  --destructive-foreground: #fafafa;
+
+  /* Increased contrast for clarity */
+  --border: #a1a1aa;
+  /* Zinc-400 */
+  --input: #a1a1aa;
+  --ring: #0644f1;
+}
+
+[data-theme='bitfinite-dark'] {
+  /* Dark Mode Defaults (Matched to BitFinite Explorer) */
+  --background: #09090b;
+  --foreground: #fafafa;
+
+  --card: #18181b;
+  --card-foreground: #fafafa;
+
+  --primary: #0644f1;
+  --primary-foreground: #ffffff;
+
+  --muted: #27272a;
+  --muted-foreground: #a1a1aa;
+
+  --accent: #27272a;
+  --accent-foreground: #fafafa;
+
+  --destructive: #7f1d1d;
+  --destructive-foreground: #fafafa;
+
+  /* Increased contrast for clarity */
+  --border: #3f3f46;
+  /* Zinc-700 */
+  --input: #3f3f46;
+  --ring: #0644f1;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+}
 
 @layer components {
   .card-body {

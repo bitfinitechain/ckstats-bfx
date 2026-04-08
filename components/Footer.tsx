@@ -2,7 +2,7 @@ import React from 'react';
 
 const Footer: React.FC = () => {
   return (
-    <footer className="footer footer-center p-4 sm:p-6 bg-base-200 text-base-content rounded">
+    <footer className="footer footer-center p-4 sm:p-6 bg-muted/50 text-muted-foreground border-t border-border">
       <div>
         <div className="grid grid-flow-col gap-4">
           <a
@@ -40,9 +40,18 @@ const Footer: React.FC = () => {
         </div>
       </div>
       <div>
-        <p>Always free, always open source.</p>
-        <p className="break-all">
-          Donations: bc1qz9vvexjmexe8pr2aueuz6x0v94ulkx2m2sp6lr
+        <p>BitFinite Ckpool Statistics</p>
+        <p className="flex items-center gap-1 justify-center mt-2">
+          Made with <span className="text-red-500">❤️</span>{' '}
+          <a
+            href="https://x.com/bitfinitechain"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:underline"
+          >
+            @bitfinitechain
+          </a>{' '}
+          on X for the Community
         </p>
       </div>
     </footer>

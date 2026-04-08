@@ -1,6 +1,6 @@
-# CK Stats
+# BitFinite Ckpool Stats
 
-This project displays real-time and historical statistics for the CKPool Bitcoin mining pool using data from their API.
+This project displays real-time and historical statistics for the BitFinite Ckpool mining pool using data from their API.
 
 ## Features
 
@@ -22,7 +22,7 @@ This project displays real-time and historical statistics for the CKPool Bitcoin
 1. Clone the repository (git clone https://github.com/mrv777/ckstats.git)
 2. Install pnpm: `curl -fsSL https://get.pnpm.io/install.sh | bash`
 3. Install packages if needed: `sudo apt install postgresql postgresql-contrib nodejs nginx`
-4. Go to the directory: `cd ckstats`
+4. Go to the directory: `cd ckstats-bfx`
 5. Set up the environment variables in `.env`
   - Example:
    ```

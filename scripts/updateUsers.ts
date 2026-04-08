@@ -43,8 +43,14 @@ async function updateUser(address: string): Promise<void> {
   let userData: UserData;
 
   // Perform a last minute check to prevent directory traversal vulnerabilities
-  if (/[^a-zA-Z0-9]/.test(address)) {
+  if (/[^a-zA-Z0-9:]/.test(address)) {
     throw new Error('updateUser(): address contains invalid characters');
+  }
+
+  // Basic validation matching new BitFinite logic
+  // Allow 'f' (new format) OR 'bfx:' (cashaddr/ckpool format)
+  if (!address.startsWith('f') && !address.startsWith('bfx:') && address.length < 5) {
+    console.warn(`Address ${address} format warning`);
   }
 
   const apiUrl = (process.env.API_URL || 'https://solo.ckpool.org') + `/users/${address}`;
@@ -56,9 +62,9 @@ async function updateUser(address: string): Promise<void> {
     try {
       const response = await fetch(apiUrl);
 
-       if (!response.ok) {
-         throw new Error(`HTTP error! status: ${response.status}`);
-       }
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
       userData = await response.json() as UserData;
     } catch (error: any) {
@@ -66,7 +72,7 @@ async function updateUser(address: string): Promise<void> {
         userData = JSON.parse(fs.readFileSync(apiUrl, 'utf-8')) as UserData;
       } else throw error;
     }
-    
+
     await db.transaction(async (manager) => {
       // Update or create user
       const userRepository = manager.getRepository(User);
@@ -104,7 +110,7 @@ async function updateUser(address: string): Promise<void> {
       // Update or create workers
       const workerRepository = manager.getRepository(Worker);
       const workerStatsRepository = manager.getRepository(WorkerStats);
-      
+
       for (const workerData of userData.worker) {
         const workerName = workerData.workername.includes('.')
           ? workerData.workername.split('.')[1]
@@ -194,31 +200,51 @@ async function updateUser(address: string): Promise<void> {
 
 async function main() {
   let db;
-  
+
   try {
     db = await getDb();
     const userRepository = db.getRepository(User);
 
-    const users = await userRepository.find({
-      where: { isActive: true },
-      order: { address: 'ASC' },
-    });
+    // --- FIX: Scan directory for users instead of DB only ---
+    // If API_URL is a file path, scan the 'users' subdirectory
+    const apiBasePath = process.env.API_URL || '';
+    let addressesToUpdate: string[] = [];
 
-    if (users.length === 0) {
-      console.log('No active users found');
+    if (apiBasePath.startsWith('/') || apiBasePath.startsWith('.')) {
+      // Local file mode
+      const usersDir = `${apiBasePath}/users`;
+      if (fs.existsSync(usersDir)) {
+        const files = fs.readdirSync(usersDir);
+        addressesToUpdate = files; // filenames are addresses
+        console.log(`Found ${files.length} user files in ${usersDir}`);
+      }
+    }
+
+    // Also include existing active users in DB
+    const existingUsers = await userRepository.find({
+      where: { isActive: true },
+      select: ['address']
+    });
+    const existingAddresses = existingUsers.map(u => u.address);
+    // Merge unique
+    addressesToUpdate = Array.from(new Set([...addressesToUpdate, ...existingAddresses]));
+    addressesToUpdate.sort();
+
+    if (addressesToUpdate.length === 0) {
+      console.log('No users found in logs or DB');
     }
 
     // Process users in batches
-    for (let i = 0; i < users.length; i += BATCH_SIZE) {
-      const batch = users.slice(i, i + BATCH_SIZE);
-      console.log(`Processing batch ${i / BATCH_SIZE + 1} of ${Math.ceil(users.length / BATCH_SIZE)}`);
-      
+    for (let i = 0; i < addressesToUpdate.length; i += BATCH_SIZE) {
+      const batch = addressesToUpdate.slice(i, i + BATCH_SIZE);
+      console.log(`Processing batch ${i / BATCH_SIZE + 1} of ${Math.ceil(addressesToUpdate.length / BATCH_SIZE)}`);
+
       await Promise.all(
-        batch.map(async (user) => {
+        batch.map(async (addr) => {
           try {
-            await updateUser(user.address);
+            await updateUser(addr);
           } catch (error) {
-            console.error(`Failed to update user ${user.address}:`, error);
+            console.error(`Failed to update user ${addr}:`, error);
           }
         })
       );
