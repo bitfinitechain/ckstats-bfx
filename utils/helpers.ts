@@ -21,7 +21,10 @@ export function formatNumber(num: number | bigint | string): string {
 
   for (const unit of isoUnits) {
     if (absNum >= unit.threshold) {
-      return (Number(num) / unit.threshold).toFixed(2) + ' ' + unit.iso;
+      // Trim trailing zeros (1.50 -> 1.5, 12.00 -> 12) and drop the space so
+      // value + unit read as a single token: 1.23M, 4.5k.
+      const scaled = (Number(num) / unit.threshold).toFixed(2).replace(/\.?0+$/, '');
+      return scaled + unit.iso;
     }
   }
 

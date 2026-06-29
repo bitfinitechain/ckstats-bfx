@@ -12,7 +12,6 @@ import {
   Legend,
   ResponsiveContainer,
   LegendType,
-  Brush,
   CartesianGrid,
 } from 'recharts';
 
@@ -38,41 +37,64 @@ export default function PoolStatsChart({ data }: PoolStatsChartProps) {
     setVisibleLines((prev) => ({ ...prev, [dataKey]: !prev[dataKey] }));
   };
 
+  // Need a few points to draw a meaningful trend; otherwise show tidy empty
+  // states instead of large blank chart areas (e.g. right after launch).
+  if (!Array.isArray(data) || data.length < 3) {
+    return (
+      <div className="mt-8 grid gap-6">
+        {['Users and Workers', 'Hashrate', 'Shares Per Second'].map((title) => (
+          <div
+            key={title}
+            className="w-full rounded-xl border border-border bg-card p-6"
+          >
+            <h2 className="text-base font-semibold tracking-tight text-foreground mb-4">{title}</h2>
+            <div className="h-40 flex flex-col items-center justify-center text-center">
+              <p className="text-sm font-medium text-foreground">No chart data yet</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Charts populate once the pool has collected a few data points.
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   const legendPayload = [
     {
       value: '1m',
       type: 'rect',
-      color: visibleLines['1m'] ? '#8884d8' : '#aaaaaa',
+      color: visibleLines['1m'] ? '#0644f1' : '#aaaaaa',
     },
     {
       value: '5m',
       type: 'rect',
-      color: visibleLines['5m'] ? '#82ca9d' : '#aaaaaa',
+      color: visibleLines['5m'] ? '#3b82f6' : '#aaaaaa',
     },
     {
       value: '15m',
       type: 'rect',
-      color: visibleLines['15m'] ? '#ffc658' : '#aaaaaa',
+      color: visibleLines['15m'] ? '#06b6d4' : '#aaaaaa',
     },
     {
       value: '1hr',
       type: 'rect',
-      color: visibleLines['1hr'] ? '#ff7300' : '#aaaaaa',
+      color: visibleLines['1hr'] ? '#8b5cf6' : '#aaaaaa',
     },
     {
       value: '6hr',
       type: 'rect',
-      color: visibleLines['6hr'] ? '#00C49F' : '#aaaaaa',
+      color: visibleLines['6hr'] ? '#22c55e' : '#aaaaaa',
     },
     {
       value: '1d',
       type: 'rect',
-      color: visibleLines['1d'] ? '#0088FE' : '#aaaaaa',
+      color: visibleLines['1d'] ? '#eab308' : '#aaaaaa',
     },
     {
       value: '7d',
       type: 'rect',
-      color: visibleLines['7d'] ? '#FF1493' : '#aaaaaa',
+      color: visibleLines['7d'] ? '#f43f5e' : '#aaaaaa',
     },
   ];
 
@@ -145,9 +167,9 @@ export default function PoolStatsChart({ data }: PoolStatsChartProps) {
   const renderUsersChart = () => (
     <div className="mb-8 w-full rounded-xl border border-border bg-card p-6 shadow-sm">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-          <span className="p-1 rounded-md bg-primary/10 text-primary">
-            <Users size={20} />
+        <h2 className="text-base font-semibold tracking-tight text-foreground flex items-center gap-2">
+          <span className="p-1.5 rounded-lg bg-primary/10 text-primary">
+            <Users size={18} />
           </span>
           Users and Workers
         </h2>
@@ -206,19 +228,6 @@ export default function PoolStatsChart({ data }: PoolStatsChartProps) {
               itemStyle={{ color: 'var(--card-foreground)' }}
             />
             <Legend wrapperStyle={{ paddingTop: '20px' }} />
-            <Brush
-              dataKey="timestamp"
-              height={30}
-              alwaysShowText={false}
-              startIndex={
-                formattedData.length - 1440 > 0
-                  ? formattedData.length - 1440
-                  : 0
-              }
-              stroke="var(--primary)"
-              fill="var(--background)"
-              tickFormatter={() => ''}
-            />
             <Area
               yAxisId="left"
               type="monotone"
@@ -248,9 +257,9 @@ export default function PoolStatsChart({ data }: PoolStatsChartProps) {
   const renderHashrateChart = () => (
     <div className="mb-8 w-full rounded-xl border border-border bg-card p-6 shadow-sm">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-          <span className="p-1 rounded-md bg-primary/10 text-primary">
-            <Activity size={20} />
+        <h2 className="text-base font-semibold tracking-tight text-foreground flex items-center gap-2">
+          <span className="p-1.5 rounded-lg bg-primary/10 text-primary">
+            <Activity size={18} />
           </span>
           Hashrate ({hashrateUnit.iso}H/s)
         </h2>
@@ -304,26 +313,13 @@ export default function PoolStatsChart({ data }: PoolStatsChartProps) {
               }))}
               onClick={(e) => handleLegendClick(e.value)}
             />
-            <Brush
-              dataKey="timestamp"
-              height={30}
-              alwaysShowText={false}
-              startIndex={
-                formattedData.length - 1440 > 0
-                  ? formattedData.length - 1440
-                  : 0
-              }
-              stroke="var(--primary)"
-              fill="var(--background)"
-              tickFormatter={() => ''}
-            />
             {visibleLines['1m'] && (
               <Area
                 type="monotone"
                 dataKey="hashrate1m"
                 name="1M"
-                stroke="#8884d8"
-                fill="#8884d8"
+                stroke="#0644f1"
+                fill="#0644f1"
                 fillOpacity={0.1}
                 strokeWidth={2}
               />
@@ -333,8 +329,8 @@ export default function PoolStatsChart({ data }: PoolStatsChartProps) {
                 type="monotone"
                 dataKey="hashrate5m"
                 name="5M"
-                stroke="#82ca9d"
-                fill="#82ca9d"
+                stroke="#3b82f6"
+                fill="#3b82f6"
                 fillOpacity={0.1}
                 strokeWidth={2}
               />
@@ -344,8 +340,8 @@ export default function PoolStatsChart({ data }: PoolStatsChartProps) {
                 type="monotone"
                 dataKey="hashrate15m"
                 name="15M"
-                stroke="#ffc658"
-                fill="#ffc658"
+                stroke="#06b6d4"
+                fill="#06b6d4"
                 fillOpacity={0.1}
                 strokeWidth={2}
               />
@@ -355,8 +351,8 @@ export default function PoolStatsChart({ data }: PoolStatsChartProps) {
                 type="monotone"
                 dataKey="hashrate1hr"
                 name="1HR"
-                stroke="#ff7300"
-                fill="#ff7300"
+                stroke="#8b5cf6"
+                fill="#8b5cf6"
                 fillOpacity={0.1}
                 strokeWidth={2}
               />
@@ -366,8 +362,8 @@ export default function PoolStatsChart({ data }: PoolStatsChartProps) {
                 type="monotone"
                 dataKey="hashrate6hr"
                 name="6HR"
-                stroke="#00C49F"
-                fill="#00C49F"
+                stroke="#22c55e"
+                fill="#22c55e"
                 fillOpacity={0.1}
                 strokeWidth={2}
               />
@@ -377,8 +373,8 @@ export default function PoolStatsChart({ data }: PoolStatsChartProps) {
                 type="monotone"
                 dataKey="hashrate1d"
                 name="1D"
-                stroke="#0088FE"
-                fill="#0088FE"
+                stroke="#eab308"
+                fill="#eab308"
                 fillOpacity={0.1}
                 strokeWidth={2}
               />
@@ -388,8 +384,8 @@ export default function PoolStatsChart({ data }: PoolStatsChartProps) {
                 type="monotone"
                 dataKey="hashrate7d"
                 name="7D"
-                stroke="#FF1493"
-                fill="#FF1493"
+                stroke="#f43f5e"
+                fill="#f43f5e"
                 fillOpacity={0.1}
                 strokeWidth={2}
               />
@@ -403,9 +399,9 @@ export default function PoolStatsChart({ data }: PoolStatsChartProps) {
   const renderSPSChart = () => (
     <div className="mb-8 w-full rounded-xl border border-border bg-card p-6 shadow-sm">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-          <span className="p-1 rounded-md bg-primary/10 text-primary">
-            <Zap size={20} />
+        <h2 className="text-base font-semibold tracking-tight text-foreground flex items-center gap-2">
+          <span className="p-1.5 rounded-lg bg-primary/10 text-primary">
+            <Zap size={18} />
           </span>
           Shares Per Second
         </h2>
@@ -452,25 +448,12 @@ export default function PoolStatsChart({ data }: PoolStatsChartProps) {
               itemStyle={{ color: 'var(--card-foreground)' }}
             />
             <Legend wrapperStyle={{ paddingTop: '20px' }} />
-            <Brush
-              dataKey="timestamp"
-              height={30}
-              alwaysShowText={false}
-              startIndex={
-                formattedData.length - 1440 > 0
-                  ? formattedData.length - 1440
-                  : 0
-              }
-              stroke="var(--primary)"
-              fill="var(--background)"
-              tickFormatter={() => ''}
-            />
             <Area
               type="monotone"
               dataKey="SPS1m"
               name="1M"
-              stroke="#8884d8"
-              fill="#8884d8"
+              stroke="#0644f1"
+              fill="#0644f1"
               fillOpacity={0.1}
               strokeWidth={2}
             />
@@ -478,8 +461,8 @@ export default function PoolStatsChart({ data }: PoolStatsChartProps) {
               type="monotone"
               dataKey="SPS5m"
               name="5M"
-              stroke="#82ca9d"
-              fill="#82ca9d"
+              stroke="#3b82f6"
+              fill="#3b82f6"
               fillOpacity={0.1}
               strokeWidth={2}
             />
@@ -487,8 +470,8 @@ export default function PoolStatsChart({ data }: PoolStatsChartProps) {
               type="monotone"
               dataKey="SPS15m"
               name="15M"
-              stroke="#ffc658"
-              fill="#ffc658"
+              stroke="#06b6d4"
+              fill="#06b6d4"
               fillOpacity={0.1}
               strokeWidth={2}
             />
@@ -496,8 +479,8 @@ export default function PoolStatsChart({ data }: PoolStatsChartProps) {
               type="monotone"
               dataKey="SPS1h"
               name="1H"
-              stroke="#ff7300"
-              fill="#ff7300"
+              stroke="#8b5cf6"
+              fill="#8b5cf6"
               fillOpacity={0.1}
               strokeWidth={2}
             />

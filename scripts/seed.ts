@@ -32,7 +32,7 @@ async function fetchPoolStats(): Promise<Partial<PoolStatsData>> {
   let data: string;
 
   console.log('Fetching pool stats...');
-  const apiUrl = (process.env.API_URL || 'https://solo.ckpool.org') + '/pool/pool.status';
+  const apiUrl = (process.env.API_URL || 'https://ckpool.bitfinitechain.org') + '/pool/pool.status';
 
   try {
     const response = await fetch(apiUrl);

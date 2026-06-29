@@ -10,9 +10,9 @@ const SoloMiningInstruction: React.FC = () => {
   return (
     <div className="bg-card border border-border rounded-xl shadow-sm p-6 mb-8 mt-6">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-          <span className="p-1 rounded-md bg-primary/10 text-primary">
-            <Pickaxe size={20} />
+        <h2 className="text-base font-semibold tracking-tight text-foreground flex items-center gap-2">
+          <span className="p-1.5 rounded-lg bg-primary/10 text-primary">
+            <Pickaxe size={18} />
           </span>
           Solo Mining Instructions
         </h2>
@@ -29,11 +29,11 @@ const SoloMiningInstruction: React.FC = () => {
               <span className="text-muted-foreground">URL:</span>
               <div className="flex items-center gap-2">
                 <span className="text-foreground font-bold">
-                  stratum+tcp://pool.bitfinite.org:3333
+                  stratum+tcp://ckpool.bitfinitechain.org:3333
                 </span>
                 <button
                   onClick={() =>
-                    handleCopy('stratum+tcp://pool.bitfinite.org:3333')
+                    handleCopy('stratum+tcp://ckpool.bitfinitechain.org:3333')
                   }
                   className="p-1 hover:bg-background rounded-md text-muted-foreground hover:text-primary transition-colors opacity-0 group-hover/item:opacity-100"
                   title="Copy URL"
@@ -61,12 +61,12 @@ const SoloMiningInstruction: React.FC = () => {
             Example Miner Command
           </h3>
           <div className="bg-muted/50 p-4 rounded-lg font-mono text-xs text-foreground break-all leading-relaxed relative group">
-            cpuminer -a sha256d -o stratum+tcp://pool.bitfinite.org:3333 -u
+            cpuminer -a sha256d -o stratum+tcp://ckpool.bitfinitechain.org:3333 -u
             bfx:youraddress -p x
             <button
               onClick={() =>
                 handleCopy(
-                  'cpuminer -a sha256d -o stratum+tcp://pool.bitfinite.org:3333 -u bfx:youraddress -p x'
+                  'cpuminer -a sha256d -o stratum+tcp://ckpool.bitfinitechain.org:3333 -u bfx:youraddress -p x'
                 )
               }
               className="absolute top-2 right-2 p-1 hover:bg-background rounded-md text-muted-foreground hover:text-primary transition-colors opacity-0 group-hover:opacity-100"

@@ -6,12 +6,6 @@ import {
   Clock,
   Zap,
   ExternalLink,
-  UserX,
-  CheckCircle2,
-  XCircle,
-  Trophy,
-  PieChart,
-  HardDrive,
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
@@ -108,32 +102,16 @@ export default function PoolStatsDisplay({
     icon: Activity,
   };
 
-  const getIconForKey = (key: string) => {
-    if (key.startsWith('hashrate')) return <Activity size={12} />;
-    if (key.startsWith('SPS')) return <Zap size={12} />;
-
-    switch (key) {
-      case 'users':
-        return <Users size={12} />;
-      case 'disconnected':
-        return <UserX size={12} />;
-      case 'workers':
-        return <HardDrive size={12} />;
-      case 'accepted':
-        return <CheckCircle2 size={12} />;
-      case 'rejected':
-        return <XCircle size={12} />;
-      case 'bestshare':
-        return <Trophy size={12} />;
-      case 'diff':
-        return <PieChart size={12} />;
-      default:
-        return null;
-    }
-  };
+  // Shared microlabel: lighter weight + wider tracking reads calmer than the
+  // bold uppercase "generic dashboard" look (restraint over decoration).
+  const labelClass =
+    'text-[11px] font-medium uppercase tracking-wider text-muted-foreground leading-tight';
+  const valueClass =
+    'text-2xl font-semibold tabular-nums tracking-tight text-foreground';
 
   const renderPercentageChange = (key: string) => {
-    if (historicalStats.length < 120) return 'N/A';
+    if (historicalStats.length < 120)
+      return <div className="mt-1 text-xs text-muted-foreground">—</div>;
 
     const currentValue = Number(stats[key]);
     const pastValue = Number(
@@ -145,10 +123,10 @@ export default function PoolStatsDisplay({
 
     return (
       <div
-        className={`stat-desc tooltip text-left ${color}`}
+        className={`tooltip mt-1 text-left text-xs font-medium tabular-nums ${color}`}
         data-tip="24 hour % change"
       >
-        {change === 'N/A' ? 'N/A' : `${change}%`}
+        {change === 'N/A' ? '—' : `${change > 0 ? '+' : ''}${change}%`}
       </div>
     );
   };
@@ -158,18 +136,20 @@ export default function PoolStatsDisplay({
       {/* General Info Card */}
       <div className="bg-card border border-border rounded-xl shadow-sm p-6">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-primary"></span>
+          <h2 className="text-base font-semibold tracking-tight text-foreground flex items-center gap-2">
+            <span className="p-1.5 rounded-lg bg-primary/10 text-primary">
+              <Activity size={18} />
+            </span>
             General Info
             {onRefresh && (
               <button
                 onClick={onRefresh}
                 disabled={isValidating}
-                className="ml-2 p-1 hover:bg-muted rounded-full transition-colors"
+                className="ml-1 p-1 hover:bg-muted rounded-full transition-colors"
                 aria-label="Refresh Data"
               >
                 <RotateCw
-                  size={16}
+                  size={15}
                   className={`text-muted-foreground ${isValidating ? 'animate-spin text-primary' : ''}`}
                 />
               </button>
@@ -181,30 +161,30 @@ export default function PoolStatsDisplay({
           />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="flex flex-col">
-            <span className="text-xs font-bold text-muted-foreground uppercase mb-1 flex items-center gap-1">
+          <div className="flex flex-col gap-1">
+            <span className={`${labelClass} flex items-center gap-1.5`}>
               <Clock size={12} />
               Uptime
             </span>
-            <div className="text-2xl font-bold text-foreground">
+            <div className={valueClass}>
               {formatDuration(stats.runtime)}
             </div>
           </div>
-          <div className="flex flex-col">
-            <span className="text-xs font-bold text-muted-foreground uppercase mb-1 flex items-center gap-1">
+          <div className="flex flex-col gap-1">
+            <span className={`${labelClass} flex items-center gap-1.5`}>
               <RotateCw size={12} />
               Last Update
             </span>
-            <div className="text-2xl font-bold text-foreground">
+            <div className={valueClass}>
               {formatTimeAgo(stats.timestamp)}
             </div>
           </div>
-          <div className="flex flex-col">
-            <span className="text-xs font-bold text-muted-foreground uppercase mb-1 flex items-center gap-1">
+          <div className="flex flex-col gap-1">
+            <span className={`${labelClass} flex items-center gap-1.5`}>
               <Zap size={12} />
               Avg Time to Find a Block
             </span>
-            <div className="text-2xl font-bold text-foreground">
+            <div className={valueClass}>
               {stats.hashrate6hr && stats.diff
                 ? formatDuration(
                     calculateAverageTimeToBlock(
@@ -218,7 +198,7 @@ export default function PoolStatsDisplay({
             <Link
               href="https://explorer.bitfinitechain.org/blocks"
               target="_blank"
-              className="text-xs text-primary hover:underline mt-1 flex items-center gap-1"
+              className="text-xs font-medium text-primary hover:underline mt-1.5 flex items-center gap-1"
             >
               Found Blocks
               <ExternalLink size={10} />
@@ -228,58 +208,59 @@ export default function PoolStatsDisplay({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {statGroups.map((group) => (
-          <div
-            key={group.title}
-            className="bg-card border border-border rounded-xl shadow-sm p-6"
-          >
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-primary"></span>
-                {group.title}
-              </h2>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-              {group.keys.map((key) => (
-                <div key={key} className="flex flex-col">
-                  <span className="text-xs font-bold text-muted-foreground uppercase mb-1 flex items-center gap-1">
-                    {getIconForKey(key)}
-                    {formatKey(key)}
+        {statGroups.map((group) => {
+          const GroupIcon = group.icon;
+          return (
+            <div
+              key={group.title}
+              className="bg-card border border-border rounded-xl shadow-sm p-6"
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-base font-semibold tracking-tight text-foreground flex items-center gap-2">
+                  <span className="p-1.5 rounded-lg bg-primary/10 text-primary">
+                    <GroupIcon size={18} />
                   </span>
-                  <div className="text-2xl font-bold text-foreground">
-                    {formatValue(key, stats[key])}
-                  </div>
-                  {key === 'users' && (
-                    <div className="text-xs text-muted-foreground mt-1">
-                      Idle: {formatNumber(stats.idle)}
+                  {group.title}
+                </h2>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-6">
+                {group.keys.map((key) => (
+                  <div key={key} className="flex flex-col gap-1 min-w-0">
+                    <span className={labelClass}>{formatKey(key)}</span>
+                    <div className={valueClass}>
+                      {formatValue(key, stats[key])}
                     </div>
-                  )}
-                </div>
-              ))}
+                    {key === 'users' && (
+                      <div className="text-xs text-muted-foreground">
+                        Idle: {formatNumber(stats.idle)}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Hashrates Card */}
       <div className="bg-card border border-border rounded-xl shadow-sm p-6">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-primary"></span>
+          <h2 className="text-base font-semibold tracking-tight text-foreground flex items-center gap-2">
+            <span className="p-1.5 rounded-lg bg-primary/10 text-primary">
+              <Activity size={18} />
+            </span>
             {hashrateGroup.title}
           </h2>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-6 divide-x-0 md:divide-x divide-border">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-x-4 gap-y-6 divide-x-0 md:divide-x divide-border">
           {hashrateGroup.keys.map((key, index) => (
             <div
               key={key}
-              className={`flex flex-col ${index !== 0 ? 'pl-0 md:pl-6' : ''}`}
+              className={`flex flex-col gap-1 ${index !== 0 ? 'pl-0 md:pl-6' : ''}`}
             >
-              <span className="text-xs font-bold text-muted-foreground uppercase mb-1 flex items-center gap-1">
-                {getIconForKey(key)}
-                {formatKey(key)}
-              </span>
-              <div className="text-xl font-bold text-foreground">
+              <span className={labelClass}>{formatKey(key)}</span>
+              <div className="text-lg font-semibold tabular-nums tracking-tight text-foreground">
                 {formatValue(key, stats[key])}
               </div>
               {renderPercentageChange(key)}

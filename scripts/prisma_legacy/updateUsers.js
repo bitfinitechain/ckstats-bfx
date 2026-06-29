@@ -19,7 +19,7 @@ async function fetchUserDataWithRetry(address, maxRetries = 3, delay = 500) {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       // console.log(`Fetching data for ${address}...`);
-      const apiUrl = process.env.API_URL || 'https://solo.ckpool.org';
+      const apiUrl = process.env.API_URL || 'https://ckpool.bitfinitechain.org';
       const response = await fetch(`${apiUrl}/users/${address}`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

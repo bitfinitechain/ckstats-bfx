@@ -193,7 +193,7 @@ export async function updateSingleUser(address: string): Promise<void> {
   }
 
   const apiUrl =
-    (process.env.API_URL || 'https://solo.ckpool.org') + `/users/${address}`;
+    (process.env.API_URL || 'https://ckpool.bitfinitechain.org') + `/users/${address}`;
 
   if (!apiUrl) {
     throw new Error('API_URL is not defined in environment variables');

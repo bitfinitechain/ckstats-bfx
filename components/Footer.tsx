@@ -1,58 +1,137 @@
-import React from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { Globe, Mail } from 'lucide-react';
+import { SiX, SiGithub, SiDiscord, SiTelegram } from 'react-icons/si';
 
 const Footer: React.FC = () => {
   return (
-    <footer className="footer footer-center p-4 sm:p-6 bg-muted/50 text-muted-foreground border-t border-border">
-      <div>
-        <div className="grid grid-flow-col gap-4">
-          <a
-            href="https://x.com/MrV_777"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-primary"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              className="fill-current"
-            >
-              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path>
-            </svg>
-          </a>
-          <a
-            href="https://github.com/mrv777/ckstats"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-primary"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              className="fill-current"
-            >
-              <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-            </svg>
-          </a>
+    <footer className="border-t border-border bg-card text-muted-foreground">
+      <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div>
+            <Link href="/" className="flex items-center space-x-3 mb-4">
+              <Image
+                src="/logo.png"
+                alt="BitFinite Logo"
+                width={40}
+                height={40}
+                className="w-10 h-10 rounded-full object-cover"
+              />
+              <span className="text-xl font-bold text-foreground">
+                BIT<span className="text-primary">FINITE</span>
+              </span>
+            </Link>
+            <p className="text-sm text-muted-foreground mb-4">
+              Open-source solo mining pool for the BitFinite network — keep the
+              full block reward, no middleman.
+            </p>
+            <div className="flex flex-col space-y-2 text-sm text-muted-foreground">
+              <a
+                href="https://bitfinitechain.org"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center hover:text-primary transition-colors"
+              >
+                <Globe className="w-4 h-4 mr-2" />
+                bitfinitechain.org
+              </a>
+              <a
+                href="mailto:support@bitfinitechain.org"
+                className="flex items-center hover:text-primary transition-colors"
+              >
+                <Mail className="w-4 h-4 mr-2" />
+                support@bitfinitechain.org
+              </a>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="font-semibold mb-4 text-foreground">Ecosystem</h3>
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              <li>
+                <a
+                  href="https://explorer.bitfinitechain.org"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-primary transition-colors"
+                >
+                  Explorer
+                </a>
+              </li>
+              <li>
+                <Link href="/" className="hover:text-primary transition-colors">
+                  Mining Pool
+                </Link>
+              </li>
+              <li>
+                <a
+                  href="https://wallet.bitfinitechain.org"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-primary transition-colors"
+                >
+                  Wallet
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://bitfinitechain.org"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-primary transition-colors"
+                >
+                  Website
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="font-semibold mb-4 text-foreground">Community</h3>
+            <div className="flex space-x-4">
+              <a
+                href="https://x.com/bitfinitechain"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-primary transition-colors"
+              >
+                <SiX className="w-5 h-5" />
+                <span className="sr-only">X (Twitter)</span>
+              </a>
+              <a
+                href="https://github.com/bitfinitechain"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-primary transition-colors"
+              >
+                <SiGithub className="w-5 h-5" />
+                <span className="sr-only">GitHub</span>
+              </a>
+              <a
+                href="https://t.me/bitfinitechain"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-primary transition-colors"
+              >
+                <SiTelegram className="w-5 h-5" />
+                <span className="sr-only">Telegram</span>
+              </a>
+              <a
+                href="#"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-primary transition-colors"
+              >
+                <SiDiscord className="w-5 h-5" />
+                <span className="sr-only">Discord</span>
+              </a>
+            </div>
+          </div>
         </div>
-      </div>
-      <div>
-        <p>BitFinite Ckpool Statistics</p>
-        <p className="flex items-center gap-1 justify-center mt-2">
-          Made with <span className="text-red-500">❤️</span>{' '}
-          <a
-            href="https://x.com/bitfinitechain"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary hover:underline"
-          >
-            @bitfinitechain
-          </a>{' '}
-          on X for the Community
-        </p>
+        <div className="mt-8 pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
+          <p>&copy; {new Date().getFullYear()} BitFinite. Open-source, community-run.</p>
+          <p>Solo mining statistics for the BitFinite network</p>
+        </div>
       </div>
     </footer>
   );

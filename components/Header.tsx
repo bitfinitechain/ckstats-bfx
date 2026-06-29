@@ -49,7 +49,7 @@ export default function Header() {
       }
     },
     onError: (error: Error) => {
-      if (error.message === 'Bitcoin address already exists') {
+      if (error.message === 'BitFinite address already exists') {
         router.push(`/users/${address}`);
       } else {
         setModalMessage(error.message);
@@ -80,13 +80,19 @@ export default function Header() {
         >
           <div className="relative w-8 h-8">
             <Image
-              src="/icon.png"
+              src="/logo.png"
               alt="BitFinite Logo"
               fill
               className="object-contain"
             />
           </div>
-          BitFinite Solo Pool
+          <span className="font-bold tracking-tight">
+            <span className="text-foreground">BIT</span>
+            <span className="text-primary">FINITE</span>
+            <span className="text-foreground ml-2 opacity-80 font-normal">
+              SOLO POOL
+            </span>
+          </span>
         </Link>
       </div>
       <div className="flex-none gap-1 sm:gap-2 flex-grow md:flex-grow-0">

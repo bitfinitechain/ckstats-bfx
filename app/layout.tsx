@@ -27,7 +27,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" data-theme="bitfinite-dark" className="dark">
       <body
         className={`${inter.variable} ${robotoMono.variable} antialiased bg-background text-foreground`}
       >
