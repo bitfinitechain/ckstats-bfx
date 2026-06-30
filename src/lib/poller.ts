@@ -10,6 +10,13 @@ const prisma = new PrismaClient();
 const LOGS_DIR = process.env.CKPOOL_LOGS_DIR || path.join(process.cwd(), '..', 'ckpool-bitfinite', 'release', 'logs');
 const USERS_DIR = path.join(LOGS_DIR, 'users');
 
+// ckpool keeps a per-user state file in USERS_DIR that survives across restarts AND across the
+// chain re-anchor, so miners from the previous (old-genesis) chain linger as "active workers".
+// Exclude any miner whose last share predates the relaunch; a returning miner reappears
+// automatically on their next share (ckpool refreshes lastshare). Default cutoff = mainnet
+// genesis nTime (the re-anchor); override with POOL_STATS_SINCE (epoch seconds) if it changes.
+const POOL_ACTIVE_SINCE = Number(process.env.POOL_STATS_SINCE || 1782691200);
+
 // Cache for balances to avoid spamming Electrum
 const balanceCache = new Map<string, { balance: any, timestamp: number }>();
 // Global Round-Robin index for cycling through users one by one
@@ -130,6 +137,11 @@ async function poll(io: Server) {
             const address = file;
 
             if (!isValidAddress(address)) continue;
+
+            // Skip miners from the previous (pre-re-anchor) chain so they don't show as active
+            // or inflate the user/worker counts. Returning miners reappear on their next share.
+            const lastShare = Number(data.lastshare || 0);
+            if (POOL_ACTIVE_SINCE > 0 && lastShare > 0 && lastShare < POOL_ACTIVE_SINCE) continue;
 
             globalStats.users++;
             globalStats.workers += data.workers || 0;
