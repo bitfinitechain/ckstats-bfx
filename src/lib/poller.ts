@@ -16,6 +16,10 @@ const USERS_DIR = path.join(LOGS_DIR, 'users');
 // automatically on their next share (ckpool refreshes lastshare). Default cutoff = mainnet
 // genesis nTime (the re-anchor); override with POOL_STATS_SINCE (epoch seconds) if it changes.
 const POOL_ACTIVE_SINCE = Number(process.env.POOL_STATS_SINCE || 1782691200);
+// Optional rolling "active" window (seconds): also drop miners idle longer than this, so anyone
+// who is genuinely gone ages out of the list even if their last share fell after the re-anchor.
+// 0 = disabled (show every post-re-anchor miner regardless of idle time). e.g. 1800 = 30 min.
+const POOL_ACTIVE_WINDOW_SEC = Number(process.env.POOL_ACTIVE_WINDOW_SEC || 0);
 
 // Cache for balances to avoid spamming Electrum
 const balanceCache = new Map<string, { balance: any, timestamp: number }>();
@@ -142,6 +146,7 @@ async function poll(io: Server) {
             // or inflate the user/worker counts. Returning miners reappear on their next share.
             const lastShare = Number(data.lastshare || 0);
             if (POOL_ACTIVE_SINCE > 0 && lastShare > 0 && lastShare < POOL_ACTIVE_SINCE) continue;
+            if (POOL_ACTIVE_WINDOW_SEC > 0 && lastShare > 0 && (Date.now() / 1000 - lastShare) > POOL_ACTIVE_WINDOW_SEC) continue;
 
             globalStats.users++;
             globalStats.workers += data.workers || 0;
