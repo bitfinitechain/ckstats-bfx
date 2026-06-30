@@ -74,3 +74,27 @@ body {
   background-color: var(--background);
   color: var(--foreground);
 }
+
+/* ===== Motion & interaction polish (Emil Kowalski principles) ===== */
+:root {
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --dur-fast: 120ms;
+  --dur: 200ms;
+}
+@media (prefers-reduced-motion: no-preference) {
+  button, [role="button"] { transition: transform var(--dur-fast) var(--ease-out); }
+  button:active, [role="button"]:active { transform: scale(0.97); }
+}
+:where(a, button, [role="button"], input, select, textarea):focus-visible {
+  outline: 2px solid var(--ring, #0644f1);
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
