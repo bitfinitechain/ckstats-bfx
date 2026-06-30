@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { SiX, SiGithub, SiDiscord, SiTelegram } from "react-icons/si";
+import { SiGithub } from "react-icons/si";
 import { Mail, Globe } from "lucide-react";
 
 export default function Footer() {
@@ -43,29 +43,17 @@ export default function Footer() {
                         <ul className="space-y-2 text-sm text-muted-foreground">
                             <li><Link href="https://explorer.bitfinitechain.org" target="_blank" className="hover:text-primary transition-colors">Explorer</Link></li>
                             <li><Link href="/" className="hover:text-primary transition-colors">Mining Pool</Link></li>
-                            <li><Link href="#" className="hover:text-primary transition-colors">Documentation</Link></li>
-                            <li><Link href="#" className="hover:text-primary transition-colors">Wallet</Link></li>
+                            <li><Link href="https://bitfinitechain.org/docs" target="_blank" className="hover:text-primary transition-colors">Documentation</Link></li>
+                            <li><Link href="https://wallet.bitfinitechain.org" target="_blank" className="hover:text-primary transition-colors">Wallet</Link></li>
                         </ul>
                     </div>
 
                     <div>
                         <h3 className="font-semibold mb-4">Community</h3>
                         <div className="flex space-x-4">
-                            <a href="https://x.com/BitFinite" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
-                                <SiX className="w-5 h-5" />
-                                <span className="sr-only">X (Twitter)</span>
-                            </a>
-                            <a href="https://github.com/BitFinite" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
+                            <a href="https://github.com/bitfinitechain" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
                                 <SiGithub className="w-5 h-5" />
                                 <span className="sr-only">GitHub</span>
-                            </a>
-                            <a href="#" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
-                                <SiTelegram className="w-5 h-5" />
-                                <span className="sr-only">Telegram</span>
-                            </a>
-                            <a href="#" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
-                                <SiDiscord className="w-5 h-5" />
-                                <span className="sr-only">Discord</span>
                             </a>
                         </div>
                     </div>
