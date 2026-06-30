@@ -1,5 +1,0 @@
-{
-  "entitiesDir": "lib/entities",
-  "migrationsDir": "migrations",
-  "subscribersDir": "lib/subscribers"
-} 

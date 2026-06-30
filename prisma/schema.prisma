@@ -1,0 +1,284 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model PoolStats {
+  id           Int      @id(map: "PK_PoolStats") @default(autoincrement())
+  timestamp    DateTime @default(now()) @db.Timestamptz(6)
+  runtime      Int
+  users        Int
+  workers      Int
+  idle         Int
+  disconnected Int
+  hashrate1m   BigInt   @default(0)
+  hashrate5m   BigInt   @default(0)
+  hashrate15m  BigInt   @default(0)
+  hashrate1hr  BigInt   @default(0)
+  hashrate6hr  BigInt   @default(0)
+  hashrate1d   BigInt   @default(0)
+  hashrate7d   BigInt   @default(0)
+  diff         Float
+  accepted     BigInt
+  rejected     BigInt
+  bestshare    BigInt
+  SPS1m        Float
+  SPS5m        Float
+  SPS15m       Float
+  SPS1h        Float
+
+  @@index([timestamp], map: "IDX_PoolStats_Timestamp")
+}
+
+model User {
+  address    String      @id(map: "PK_User") @db.VarChar
+  createdAt  DateTime    @default(now()) @db.Timestamp(6)
+  updatedAt  DateTime    @default(now()) @db.Timestamp(6)
+  authorised BigInt      @default(0)
+  isActive   Boolean     @default(true)
+  isPublic   Boolean     @default(true)
+  UserStats  UserStats[]
+  Worker     Worker[]
+
+  @@index([address], map: "User_address_key")
+  @@index([isActive])
+  @@index([isPublic])
+}
+
+model UserStats {
+  id          Int      @id(map: "PK_UserStats") @default(autoincrement())
+  userAddress String   @db.VarChar
+  timestamp   DateTime @default(now()) @db.Timestamptz(6)
+  hashrate1m  BigInt   @default(0)
+  hashrate5m  BigInt   @default(0)
+  hashrate1hr BigInt   @default(0)
+  hashrate1d  BigInt   @default(0)
+  hashrate7d  BigInt   @default(0)
+  lastShare   BigInt   @default(0)
+  workerCount Int      @default(0)
+  shares      BigInt   @default(0)
+  bestShare   Float    @default(0)
+  bestEver    BigInt   @default(0)
+  User        User     @relation(fields: [userAddress], references: [address], onDelete: Cascade, onUpdate: NoAction, map: "FK_UserStats_User")
+
+  @@index([timestamp])
+  @@index([userAddress, bestEver, timestamp], map: "userAddress_bestEver_timestamp_idx")
+  @@index([userAddress, hashrate1hr, timestamp], map: "userAddress_hashrate1hr_timestamp_idx")
+  @@index([userAddress, timestamp], map: "userAddress_timestamp_idx")
+}
+
+model Worker {
+  id          Int           @id(map: "PK_Worker") @default(autoincrement())
+  name        String        @default("") @db.VarChar
+  createdAt   DateTime      @default(now()) @db.Timestamp(6)
+  updatedAt   DateTime      @default(now()) @db.Timestamp(6)
+  hashrate1m  BigInt        @default(0)
+  hashrate5m  BigInt        @default(0)
+  hashrate1hr BigInt        @default(0)
+  hashrate1d  BigInt        @default(0)
+  hashrate7d  BigInt        @default(0)
+  lastUpdate  DateTime      @default(now()) @db.Timestamp(6)
+  shares      BigInt        @default(0)
+  bestShare   Float         @default(0)
+  bestEver    BigInt        @default(0)
+  userAddress String        @db.VarChar
+  User        User          @relation(fields: [userAddress], references: [address], onDelete: Cascade, onUpdate: NoAction, map: "FK_Worker_User")
+  WorkerStats WorkerStats[]
+
+  @@unique([userAddress, name], map: "UQ_Worker_User_Name")
+}
+
+model WorkerStats {
+  id          Int      @id(map: "PK_WorkerStats") @default(autoincrement())
+  workerId    Int
+  timestamp   DateTime @default(now()) @db.Timestamptz(6)
+  hashrate1m  BigInt   @default(0)
+  hashrate5m  BigInt   @default(0)
+  hashrate1hr BigInt   @default(0)
+  hashrate1d  BigInt   @default(0)
+  hashrate7d  BigInt   @default(0)
+  shares      BigInt   @default(0)
+  bestShare   Float    @default(0)
+  bestEver    BigInt   @default(0)
+  Worker      Worker   @relation(fields: [workerId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_WorkerStats_Worker")
+
+  @@index([timestamp])
+  @@index([workerId])
+}
+
+model address {
+  address        String   @id(map: "PK_0a1ed89729fa10ba8b81b99f305") @db.VarChar
+  balance        Decimal  @default(0) @db.Decimal(28, 8)
+  total_received Decimal  @default(0) @db.Decimal(28, 8)
+  updated_at     DateTime @default(now()) @db.Timestamp(6)
+  tx_count       Int      @default(0)
+}
+
+model address_transaction {
+  id           Int     @id(map: "PK_3fa67ab1bc115c70b39209dd09e") @default(autoincrement())
+  address      String  @db.VarChar
+  txid         String  @db.VarChar
+  amount       Decimal @db.Decimal(20, 8)
+  type         String  @db.VarChar
+  block_height Int
+  timestamp    BigInt
+
+  @@unique([address, txid], map: "IDX_2dcee5896d2583f09be6310437")
+  @@index([address], map: "IDX_3ac1c58a72a1feb2b72bf7d67d")
+  @@index([address, timestamp], map: "IDX_42568385bd3c276126c553c5dd")
+}
+
+model block {
+  height      Int           @id(map: "PK_bce676e2b005104ccb768495dbb")
+  hash        String        @unique(map: "UQ_f8fba63d7965bfee9f304c487aa") @db.VarChar
+  timestamp   BigInt
+  difficulty  Float
+  merkle_root String        @db.VarChar
+  size        Int
+  tx_count    Int
+  miner       String?       @db.VarChar
+  created_at  DateTime      @default(now()) @db.Timestamp(6)
+  chainwork   String?       @db.VarChar
+  version     Int           @default(1)
+  nonce       BigInt        @default(0)
+  bits        String?       @db.VarChar
+  transaction transaction[]
+
+  @@index([hash], map: "IDX_f8fba63d7965bfee9f304c487a")
+}
+
+model c_e {
+  height      Int      @id(map: "PK_9a3481b106ca3de67f4edcc59f2")
+  hash        String   @unique(map: "UQ_cb0ed87cf90b7709f581c54cc33") @db.VarChar
+  timestamp   BigInt
+  difficulty  Float
+  merkle_root String   @db.VarChar
+  size        Int
+  tx_count    Int
+  chainwork   String?  @db.VarChar
+  version     Int      @default(1)
+  nonce       BigInt   @default(0)
+  bits        String?  @db.VarChar
+  miner       String?  @db.VarChar
+  created_at  DateTime @default(now()) @db.Timestamp(6)
+  c_f         c_f[]
+
+  @@index([hash], map: "IDX_cb0ed87cf90b7709f581c54cc3")
+}
+
+model c_f {
+  txid         String   @id(map: "PK_dfd1cb241b807d728fa3a522d6f") @db.VarChar
+  block_height Int
+  input_count  Int
+  output_count Int
+  value_total  Decimal  @db.Decimal(20, 8)
+  size         Int      @default(0)
+  vsize        Int      @default(0)
+  weight       Int      @default(0)
+  version      Int      @default(1)
+  locktime     BigInt   @default(0)
+  inputs       Json?
+  outputs      Json?
+  created_at   DateTime @default(now()) @db.Timestamp(6)
+  c_e          c_e      @relation(fields: [block_height], references: [height], onDelete: NoAction, onUpdate: NoAction, map: "FK_508da64eae7e5ad949263d8b336")
+
+  @@index([block_height], map: "IDX_508da64eae7e5ad949263d8b33")
+}
+
+model c_g {
+  address        String   @id(map: "PK_eec31a4cc438bf22851358f1a32") @db.VarChar
+  balance        Decimal  @default(0) @db.Decimal(28, 8)
+  total_received Decimal  @default(0) @db.Decimal(28, 8)
+  tx_count       Int      @default(0)
+  updated_at     DateTime @default(now()) @db.Timestamp(6)
+}
+
+model c_h {
+  id           Int     @id(map: "PK_f138f7860626e6cabd3ac367545") @default(autoincrement())
+  address      String  @db.VarChar
+  txid         String  @db.VarChar
+  amount       Decimal @db.Decimal(20, 8)
+  type         String  @db.VarChar
+  block_height Int
+  timestamp    BigInt
+
+  @@unique([address, txid], map: "IDX_0478608e6cc4f9d058982e68eb")
+  @@index([address, timestamp], map: "IDX_79642c766ff804b8180b8ba4b5")
+  @@index([address], map: "IDX_d8f9269f09ab2aa8e90f3feec0")
+}
+
+model c_m {
+  address        String   @id(map: "PK_1d926423ab32b37daa1086814b6") @db.VarChar
+  balance        Decimal  @default(0) @db.Decimal(28, 8)
+  total_received Decimal  @default(0) @db.Decimal(28, 8)
+  updated_at     DateTime @default(now()) @db.Timestamp(6)
+}
+
+model c_n {
+  height      Int      @id(map: "PK_3680fc406823947897911d9e461")
+  hash        String   @unique(map: "UQ_91277e58010f8ffaaff848f7425") @db.VarChar
+  timestamp   BigInt
+  difficulty  Float
+  merkle_root String   @db.VarChar
+  size        Int
+  tx_count    Int
+  miner       String   @db.VarChar
+  created_at  DateTime @default(now()) @db.Timestamp(6)
+  c_o         c_o[]
+
+  @@index([hash], map: "IDX_91277e58010f8ffaaff848f742")
+}
+
+model c_o {
+  txid         String   @id(map: "PK_942921cbaa92c3e98a8f4d6b4f4") @db.VarChar
+  block_height Int
+  input_count  Int
+  output_count Int
+  value_total  Decimal  @db.Decimal(20, 8)
+  created_at   DateTime @default(now()) @db.Timestamp(6)
+  c_n          c_n      @relation(fields: [block_height], references: [height], onDelete: NoAction, onUpdate: NoAction, map: "FK_e623e0a928c89e5b50c5c16ce65")
+
+  @@index([block_height], map: "IDX_e623e0a928c89e5b50c5c16ce6")
+}
+
+model c_p {
+  id           Int     @id(map: "PK_88becce080e4f5d1f40a20cf855") @default(autoincrement())
+  address      String  @db.VarChar
+  txid         String  @db.VarChar
+  amount       Decimal @db.Decimal(20, 8)
+  type         String  @db.VarChar
+  block_height Int
+  timestamp    BigInt
+
+  @@index([address, timestamp], map: "IDX_48464d7eb6e783564b7f264cb6")
+  @@index([address], map: "IDX_cd05a4eb8d33761f4b8b62eebb")
+}
+
+model migrations {
+  id        Int    @id(map: "PK_8c82d7f526340ab734260ea46be") @default(autoincrement())
+  timestamp BigInt
+  name      String @db.VarChar
+}
+
+model transaction {
+  txid         String   @id(map: "PK_1c73bebbbe93c21b41ecae64bb2") @db.VarChar
+  block_height Int
+  input_count  Int
+  output_count Int
+  value_total  Decimal  @db.Decimal(20, 8)
+  created_at   DateTime @default(now()) @db.Timestamp(6)
+  size         Int      @default(0)
+  vsize        Int      @default(0)
+  weight       Int      @default(0)
+  version      Int      @default(1)
+  locktime     BigInt   @default(0)
+  inputs       Json?
+  outputs      Json?
+  block        block    @relation(fields: [block_height], references: [height], onDelete: NoAction, onUpdate: NoAction, map: "FK_978d2353f5c22ee7bd1a84d1e4b")
+
+  @@index([block_height], map: "IDX_978d2353f5c22ee7bd1a84d1e4")
+}

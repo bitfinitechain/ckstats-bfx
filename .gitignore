@@ -1,49 +1,17 @@
-# Dependencies
-node_modules
-/.pnp
-.pnp.js
-
-# Testing
-/coverage
-
-# Next.js
-/.next/
-/out/
-
-# Production
-/build
-
-# Misc
-.DS_Store
-*.pem
-
-# Debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Local env files
-.env*.local
+# dependencies
+node_modules/
+# next.js
+.next/
+out/
+# env / secrets
 .env
+.env*.local
+# logs
+*.log
+npm-debug.log*
+# os
+.DS_Store
 
-# Vercel
-.vercel
-
-# TypeScript
+# build cache / generated
 *.tsbuildinfo
 next-env.d.ts
-
-# Prisma
-/prisma/*.sqlite3
-/prisma/*.sqlite3-journal
-/prisma/*.db
-/prisma/*.db-journal
-
-# IDE-specific files
-.idea
-.vscode
-
-.clinic
-
-# runtime logs
-*.log
