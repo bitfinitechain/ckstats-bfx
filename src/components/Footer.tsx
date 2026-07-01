@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { SiGithub } from "react-icons/si";
-import { Mail, Globe } from "lucide-react";
+import { Github, Globe, Mail } from "lucide-react";
 
 export default function Footer() {
     return (
@@ -41,10 +40,11 @@ export default function Footer() {
                     <div>
                         <h3 className="font-semibold mb-4">Ecosystem</h3>
                         <ul className="space-y-2 text-sm text-muted-foreground">
-                            <li><Link href="https://explorer.bitfinitechain.org" target="_blank" className="hover:text-primary transition-colors">Explorer</Link></li>
+                            <li><Link href="https://explorer.bitfinitechain.org" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Explorer</Link></li>
                             <li><Link href="/" className="hover:text-primary transition-colors">Mining Pool</Link></li>
-                            <li><Link href="https://bitfinitechain.org/docs" target="_blank" className="hover:text-primary transition-colors">Documentation</Link></li>
-                            <li><Link href="https://wallet.bitfinitechain.org" target="_blank" className="hover:text-primary transition-colors">Wallet</Link></li>
+                            <li><Link href="https://bitfinitechain.org/docs" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Documentation</Link></li>
+                            <li><Link href="https://wallet.bitfinitechain.org" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Wallet</Link></li>
+                            <li><Link href="https://bitfinitechain.org/whitepaper" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Whitepaper</Link></li>
                         </ul>
                     </div>
 
@@ -52,15 +52,14 @@ export default function Footer() {
                         <h3 className="font-semibold mb-4">Community</h3>
                         <div className="flex space-x-4">
                             <a href="https://github.com/bitfinitechain" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
-                                <SiGithub className="w-5 h-5" />
+                                <Github className="w-5 h-5" />
                                 <span className="sr-only">GitHub</span>
                             </a>
                         </div>
                     </div>
                 </div>
-                <div className="mt-8 pt-8 border-t border-border flex flex-col items-center justify-center text-sm text-muted-foreground">
-                    <p className="mb-2">Made with <span className="text-red-500">❤️</span> for Bitfinite Community and Supporter</p>
-                    <p>&copy; {new Date().getFullYear()} BitFinite Foundation. All rights reserved.</p>
+                <div className="mt-8 pt-8 border-t border-border text-center text-sm text-muted-foreground">
+                    &copy; {new Date().getFullYear()} BitFinite Foundation. All rights reserved.
                 </div>
             </div>
         </footer>
