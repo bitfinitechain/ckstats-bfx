@@ -1,11 +1,10 @@
 
-import { hashrateSuffix, abbreviateNumber, secondsToDHM, diffToNowDHM } from "@/lib/utils";
+import { hashrateSuffix, abbreviateNumber, secondsToDHM, diffToNowDHM, getBlockReward, formatBFX, expectedBlockSeconds } from "@/lib/utils";
 import {
     Card,
 } from "@/components/ui/card";
 import MiniChart from "@/components/MiniChart";
-import NetworkChart from "@/components/NetworkChart";
-import { Activity, CheckCircle, Info, Users, Clock, Calendar } from "lucide-react";
+import { Activity, CheckCircle, Users, Gauge } from "lucide-react";
 
 interface TilesProps {
     stats: any;
@@ -15,10 +14,13 @@ export default function Tiles({ stats }: TilesProps) {
     if (!stats) return null;
     const { global, blocks, history } = stats;
 
-
+    const latestHeight = blocks?.[0]?.height ?? 0;
+    const poolHr = Number(global.hashrate1d || global.hashrate5m || 0);
+    const estSecs = expectedBlockSeconds(global.difficulty || 0, poolHr);
+    const estBlock = estSecs > 0 ? secondsToDHM(estSecs) : '—';
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {/* Hashrate Tile */}
             <Card className="p-6">
                 <div className="flex justify-between items-start mb-2">
@@ -112,6 +114,36 @@ export default function Tiles({ stats }: TilesProps) {
                     <div className="flex flex-col col-span-2">
                         <span className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Last Update</span>
                         <span className="text-lg font-bold font-mono">{diffToNowDHM(global.lastupdate || Date.now() / 1000)}</span>
+                    </div>
+                </div>
+            </Card>
+
+            {/* Network Tile */}
+            <Card className="p-6">
+                <div className="flex justify-between items-start mb-2">
+                    <span className="text-xs font-bold text-muted-foreground uppercase">NETWORK</span>
+                    <Gauge size={16} className="text-primary" />
+                </div>
+                <div className="text-2xl font-bold text-foreground mb-4">
+                    {hashrateSuffix(global.networkHashrate || 0)}
+                    <span className="text-sm font-normal text-muted-foreground ml-2">Net Hashrate</span>
+                </div>
+
+                {history && history.networkHashrate && history.networkHashrate.length > 1 && (
+                    <div className="mb-4">
+                        <div className="h-10">
+                            <MiniChart data={history.networkHashrate} type="line" color="var(--primary)" height={40} />
+                        </div>
+                        <p className="text-[10px] text-muted-foreground text-right mt-1">Network Hashrate</p>
+                    </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-y-4 pt-2 border-t mt-auto">
+                    <Metric label="Difficulty" headline={abbreviateNumber(global.difficulty || 0)} />
+                    <Metric label="Block Reward" headline={formatBFX(getBlockReward(latestHeight))} />
+                    <div className="col-span-2 mt-2 pt-2 border-t flex justify-between items-center">
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Est. Time to Block</span>
+                        <span className="text-lg font-bold font-mono">{estBlock}</span>
                     </div>
                 </div>
             </Card>

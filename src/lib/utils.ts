@@ -72,6 +72,30 @@ export function obfuscateAddress(address: string): string {
     return `${address.slice(0, 10)}...${address.slice(-6)}`;
 }
 
+// BitFinite coinbase subsidy: 50 BFX at genesis, halving every 210,000 blocks.
+// (210,000 * 50 * 2 = 21,000,000 max supply.) This is the block reward paid to
+// the miner who solves a block — the "amount" a solo-pool payout represents.
+export const HALVING_INTERVAL = 210_000;
+export const INITIAL_SUBSIDY = 50;
+export function getBlockReward(height: number): number {
+    if (!Number.isFinite(height) || height < 0) return 0;
+    const halvings = Math.floor(height / HALVING_INTERVAL);
+    if (halvings >= 64) return 0;
+    return INITIAL_SUBSIDY / 2 ** halvings;
+}
+
+// Format a BFX amount for display, e.g. 50 -> "50.00 BFX".
+export function formatBFX(amount: number): string {
+    return `${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} BFX`;
+}
+
+// Rough expected time (seconds) for `hashrate` (H/s) to find a block at `difficulty`.
+// Solo-mining intuition: how long until you'd statistically expect to hit a block.
+export function expectedBlockSeconds(difficulty: number, hashrate: number): number {
+    if (!difficulty || !hashrate || hashrate <= 0) return 0;
+    return (difficulty * 2 ** 32) / hashrate;
+}
+
 export function secondsToDHM(seconds: number): string {
     const d = Math.floor(seconds / (3600 * 24));
     const h = Math.floor((seconds % (3600 * 24)) / 3600);

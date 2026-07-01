@@ -60,21 +60,21 @@ export default function Dashboard() {
                                 <TableHead className="text-xs font-bold font-sans uppercase text-muted-foreground">Address</TableHead>
                                 <TableHead className="text-right text-xs font-bold font-sans uppercase text-muted-foreground">Workers</TableHead>
                                 <TableHead className="text-right text-xs font-bold font-sans uppercase text-muted-foreground">Hashrate (5m)</TableHead>
-                                <TableHead className="text-right text-xs font-bold font-sans uppercase text-muted-foreground">Last Share</TableHead>
+                                <TableHead className="hidden sm:table-cell text-right text-xs font-bold font-sans uppercase text-muted-foreground">Last Share</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {users && users.length > 0 ? (
                                 users.map((u: any) => (
                                     <TableRow key={u.address}>
-                                        <TableCell className="font-bold font-mono text-sm truncate max-w-[200px] md:max-w-none" title="Address hidden for privacy">
+                                        <TableCell className="font-bold font-mono text-xs sm:text-sm truncate max-w-[160px] sm:max-w-[200px] md:max-w-none" title="Address hidden for privacy">
                                             {obfuscateAddress(u.address)}
                                         </TableCell>
-                                        <TableCell className="text-right font-bold font-barlow text-lg">{u.workers}</TableCell>
-                                        <TableCell className="text-right font-bold font-barlow text-lg">
+                                        <TableCell className="text-right font-bold font-barlow text-base sm:text-lg">{u.workers}</TableCell>
+                                        <TableCell className="text-right font-bold font-barlow text-base sm:text-lg whitespace-nowrap">
                                             {formatHashrate(u.hashrate5m)} <span className="text-sm font-normal text-muted-foreground">H/s</span>
                                         </TableCell>
-                                        <TableCell className="text-right font-bold font-barlow text-lg">
+                                        <TableCell className="hidden sm:table-cell text-right font-bold font-barlow text-lg whitespace-nowrap">
                                             {diffToNowDHM(u.lastshare)}
                                         </TableCell>
                                     </TableRow>

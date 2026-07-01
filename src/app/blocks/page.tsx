@@ -16,6 +16,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Pagination } from "@/components/Pagination";
+import { getBlockReward, formatBFX, obfuscateAddress } from "@/lib/utils";
 import React from 'react';
 
 export default function BlocksPage() {
@@ -59,25 +60,27 @@ export default function BlocksPage() {
                         <TableRow>
                             <TableHead className="text-xs font-bold font-sans uppercase text-muted-foreground">Height</TableHead>
                             <TableHead className="text-xs font-bold font-sans uppercase text-muted-foreground">Solved By</TableHead>
-                            <TableHead className="text-right text-xs font-bold font-sans uppercase text-muted-foreground">Time Found</TableHead>
+                            <TableHead className="text-right text-xs font-bold font-sans uppercase text-muted-foreground">Reward</TableHead>
+                            <TableHead className="hidden sm:table-cell text-right text-xs font-bold font-sans uppercase text-muted-foreground">Time Found</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {paginatedBlocks && paginatedBlocks.length > 0 ? (
                             paginatedBlocks.map((block: any, i: number) => (
                                 <TableRow key={i}>
-                                    <TableCell className="font-bold font-mono text-sm">#{block.height}</TableCell>
-                                    <TableCell className="font-bold font-mono text-sm truncate max-w-[300px]" title={block.solver}>
+                                    <TableCell className="font-bold font-mono text-sm whitespace-nowrap">#{block.height}</TableCell>
+                                    <TableCell className="font-bold font-mono text-xs sm:text-sm" title={block.solver}>
                                         <a href={`https://explorer.bitfinitechain.org/address/${block.solver}`} target="_blank" rel="noopener noreferrer" className="hover:underline text-primary">
-                                            {block.solver}
+                                            {obfuscateAddress(block.solver)}
                                         </a>
                                     </TableCell>
-                                    <TableCell className="text-right font-bold font-mono text-sm">{new Date(block.time).toLocaleString()}</TableCell>
+                                    <TableCell className="text-right font-bold font-mono text-xs sm:text-sm text-primary whitespace-nowrap">{formatBFX(getBlockReward(block.height))}</TableCell>
+                                    <TableCell className="hidden sm:table-cell text-right font-bold font-mono text-sm whitespace-nowrap">{new Date(block.time).toLocaleString()}</TableCell>
                                 </TableRow>
                             ))
                         ) : (
                             <TableRow>
-                                <TableCell colSpan={3} className="h-24 text-center">
+                                <TableCell colSpan={4} className="h-24 text-center">
                                     No blocks found recently.
                                 </TableCell>
                             </TableRow>

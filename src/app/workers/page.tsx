@@ -58,19 +58,19 @@ export default function WorkersPage() {
                             <TableHead className="text-xs font-bold font-sans uppercase text-muted-foreground">Address</TableHead>
                             <TableHead className="text-right text-xs font-bold font-sans uppercase text-muted-foreground">Workers</TableHead>
                             <TableHead className="text-right text-xs font-bold font-sans uppercase text-muted-foreground">Hashrate (5m)</TableHead>
-                            <TableHead className="text-right text-xs font-bold font-sans uppercase text-muted-foreground">Last Share</TableHead>
+                            <TableHead className="hidden sm:table-cell text-right text-xs font-bold font-sans uppercase text-muted-foreground">Last Share</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {users && users.length > 0 ? (
                             users.map((u: any) => (
                                 <TableRow key={u.address}>
-                                    <TableCell className="font-bold font-mono text-sm truncate max-w-[300px]" title="Address hidden for privacy">
+                                    <TableCell className="font-bold font-mono text-xs sm:text-sm truncate max-w-[160px] sm:max-w-[300px]" title="Address hidden for privacy">
                                         {obfuscateAddress(u.address)}
                                     </TableCell>
-                                    <TableCell className="text-right font-bold font-mono text-sm">{u.workers}</TableCell>
-                                    <TableCell className="text-right font-bold font-mono text-sm">{formatHashrate(u.hashrate5m)} <span className="text-xs font-normal text-muted-foreground">H/s</span></TableCell>
-                                    <TableCell className="text-right font-bold font-mono text-sm">{u.lastshare ? new Date(u.lastshare * 1000).toLocaleTimeString() : 'N/A'}</TableCell>
+                                    <TableCell className="text-right font-bold font-mono text-xs sm:text-sm">{u.workers}</TableCell>
+                                    <TableCell className="text-right font-bold font-mono text-xs sm:text-sm whitespace-nowrap">{formatHashrate(u.hashrate5m)} <span className="text-xs font-normal text-muted-foreground">H/s</span></TableCell>
+                                    <TableCell className="hidden sm:table-cell text-right font-bold font-mono text-sm whitespace-nowrap">{u.lastshare ? new Date(u.lastshare * 1000).toLocaleTimeString() : 'N/A'}</TableCell>
                                 </TableRow>
                             ))
                         ) : (

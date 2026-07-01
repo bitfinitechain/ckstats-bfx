@@ -15,7 +15,7 @@ export default function Header() {
         { name: "Dashboard", href: "/" },
         { name: "Workers", href: "/workers" },
         { name: "Blocks", href: "/blocks" },
-        { name: "Transactions", href: "/transactions" },
+        { name: "Payouts", href: "/transactions" },
     ];
 
     return (
