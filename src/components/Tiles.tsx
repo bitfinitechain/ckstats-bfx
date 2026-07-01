@@ -19,6 +19,13 @@ export default function Tiles({ stats }: TilesProps) {
     const estSecs = expectedBlockSeconds(global.difficulty || 0, poolHr);
     const estBlock = estSecs > 0 ? secondsToDHM(estSecs) : '—';
 
+    // Share rate = new accepted shares per poll interval (delta of the cumulative
+    // accepted-shares series). Represents how hard the active workers are grinding —
+    // a live signal, unlike the flat worker-count line, and distinct from every other tile.
+    const shareRate: number[] = Array.isArray(history?.shares)
+        ? history.shares.map((v: number, i: number, a: number[]) => (i > 0 ? Math.max(0, v - a[i - 1]) : 0))
+        : [];
+
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {/* Hashrate Tile */}
@@ -92,13 +99,13 @@ export default function Tiles({ stats }: TilesProps) {
                     <span className="text-sm font-normal text-muted-foreground ml-2">Workers</span>
                 </div>
 
-                {/* Workers Line Chart */}
-                {history && history.workers && history.workers.length > 1 && (
+                {/* Share-rate chart — how many accepted shares the workers land per interval */}
+                {shareRate.length > 1 && (
                     <div className="mb-4">
                         <div className="h-10">
-                            <MiniChart data={history.workers} type="line" color="var(--primary)" height={40} />
+                            <MiniChart data={shareRate} type="line" color="var(--primary)" height={40} />
                         </div>
-                        <p className="text-[10px] text-muted-foreground text-right mt-1">Worker Activity</p>
+                        <p className="text-[10px] text-muted-foreground text-right mt-1">Share Activity</p>
                     </div>
                 )}
 
