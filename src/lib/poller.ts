@@ -299,30 +299,31 @@ async function poll(io: Server) {
     // --- Network Stats (Difficulty/Hashrate) ---
     try {
         const header = await electrum.getLatestHeader();
+        // Electrum's blockchain.headers.subscribe returns { height, hex } — the 80-byte
+        // block header, NOT a parsed object. nBits is a 4-byte field at byte offset 72
+        // (hex offset 144), little-endian. (Some servers may also expose header.bits.)
+        let bits: number | undefined;
         if (header && typeof header.bits === 'number') {
-            const bits = header.bits;
-            // Decode bits (compact format)
+            bits = header.bits;
+        } else if (header?.hex && header.hex.length >= 152) {
+            const le = header.hex.substr(144, 8);
+            bits = parseInt(le.match(/../g)!.reverse().join(''), 16);
+        }
+
+        if (bits) {
+            // Decode compact bits: exponent (high byte) + 23-bit mantissa.
             const exponent = bits >> 24;
             const coefficient = bits & 0x007fffff;
 
-            // Target = coefficient * 2^(8*(exponent-3))
-            // Difficulty = MaxTarget / Target.
-            // Simplified approximation: Diff = (0xffff * 2^208) / Target
-            // Or more practical: Diff = (0x1d00ffff target) / current_target
-            // Standard Bitcoin diff 1 is 0x1d00ffff (bits) -> 0x00ffff * 256^(0x1d-3)
-            // Diff = (0x00ffff * 256^(29-3)) / (coefficient * 256^(exponent-3))
-            // Diff = (0xffff * 256^26) / (coefficient * 256^(exponent-3))
-
-            // Let's use floating point approximation
+            // Difficulty = diff-1 target (0x1d00ffff) / current target
+            //            = (0x00ffff / coefficient) * 2^(8*(0x1d - exponent))
             const shift = 8 * (0x1d - exponent);
             const diff = (0x00ffff / coefficient) * Math.pow(2, shift);
 
             globalStats.difficulty = diff;
-            // Network Hashrate = Difficulty * 2^32 / TargetTime
-            // Assuming 60 seconds target time for BitFinite
-            globalStats.networkHashrate = (diff * Math.pow(2, 32)) / 60;
-
-            // console.log(`Network Diff: ${diff}, Hashrate: ${globalStats.networkHashrate}`);
+            // Network hashrate estimate = difficulty * 2^32 / target block time.
+            // BitFinite targets 5-minute (300s) blocks.
+            globalStats.networkHashrate = (diff * Math.pow(2, 32)) / 300;
         }
     } catch (e) {
         // console.error("Failed to fetch network stats:", e);
