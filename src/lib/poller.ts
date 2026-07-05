@@ -7,44 +7,59 @@ import { parseHashrate } from './utils';
 import { electrum, isValidAddress } from './electrum';
 
 const prisma = new PrismaClient();
-const LOGS_DIR = process.env.CKPOOL_LOGS_DIR || path.join(process.cwd(), '..', 'ckpool-bitfinite', 'release', 'logs');
-const USERS_DIR = path.join(LOGS_DIR, 'users');
 
-// ckpool keeps a per-user state file in USERS_DIR that survives across restarts AND across the
-// chain re-anchor, so miners from the previous (old-genesis) chain linger as "active workers".
-// Exclude any miner whose last share predates the relaunch; a returning miner reappears
-// automatically on their next share (ckpool refreshes lastshare). Default cutoff = mainnet
-// genesis nTime (the re-anchor); override with POOL_STATS_SINCE (epoch seconds) if it changes.
+// Two ckpool sources feed the dashboard's Solo / Pool tabs:
+//  - SOLO: seed-1's ckpool running in -B (solo) mode.
+//  - POOL: seed-3's ckpool running in shared/pool mode.
+// Each source is just a ckpool logs directory containing users/, pool/pool.status
+// and ckpool.log. POOL_CKPOOL_LOGS_DIR is optional — if unset (or missing on disk)
+// the Pool tab renders a "coming online" state instead of zeros.
+const SOLO_LOGS_DIR = process.env.CKPOOL_LOGS_DIR || path.join(process.cwd(), '..', 'ckpool-bitfinite', 'release', 'logs');
+const POOL_LOGS_DIR = process.env.POOL_CKPOOL_LOGS_DIR || '';
+
+// ckpool keeps a per-user state file that survives across restarts AND across the
+// chain re-anchor, so miners from the previous (old-genesis) chain linger as "active
+// workers". Exclude any miner whose last share predates the relaunch; a returning
+// miner reappears automatically on their next share. Default cutoff = mainnet genesis
+// nTime (the re-anchor); override with POOL_STATS_SINCE (epoch seconds) if it changes.
 const POOL_ACTIVE_SINCE = Number(process.env.POOL_STATS_SINCE || 1782691200);
-// Optional rolling "active" window (seconds): also drop miners idle longer than this, so anyone
-// who is genuinely gone ages out of the list even if their last share fell after the re-anchor.
+// Optional rolling "active" window (seconds): also drop miners idle longer than this.
 // 0 = disabled (show every post-re-anchor miner regardless of idle time). e.g. 1800 = 30 min.
 const POOL_ACTIVE_WINDOW_SEC = Number(process.env.POOL_ACTIVE_WINDOW_SEC || 0);
 
+// --- Shared cross-cutting state (chain-wide, not per source) ---
 // Cache for balances to avoid spamming Electrum
 const balanceCache = new Map<string, { balance: any, timestamp: number }>();
 // Global Round-Robin index for cycling through users one by one
 let nextUserIndex = 0;
 const pendingBalanceFetches = new Set<string>();
 const txidCache = new Map<number, string>();
-
 // Global busy flag for Electrum to enforce strict serial execution
 let electrumBusy = false;
 
 const POLLING_INTERVAL_MS = 2000; // 2 seconds
 
-// In-memory history (reset on restart)
-const history: { workers: number[], shares: number[], hashrate: number[], networkHashrate: number[] } = {
-    workers: [],
-    shares: [],
-    hashrate: [],
-    networkHashrate: []
-};
-const userHistory = new Map<string, { workers: number[], shares: number[], hashrate: number[], balance: number[] }>();
-const workerHistory = new Map<string, { hashrate: number[], shares: number[] }>();
+type SourceHistory = { workers: number[], shares: number[], hashrate: number[], networkHashrate: number[] };
+type UserHistory = Map<string, { workers: number[], shares: number[], hashrate: number[], balance: number[] }>;
+type WorkerHistory = Map<string, { hashrate: number[], shares: number[] }>;
+
+// Per-source in-memory history (reset on restart). Keyed by source ('solo' | 'pool').
+const sourceHistory: Record<string, SourceHistory> = {};
+const sourceUserHistory: Record<string, UserHistory> = {};
+const sourceWorkerHistory: Record<string, WorkerHistory> = {};
+
+function histFor(key: string): SourceHistory {
+    return (sourceHistory[key] ??= { workers: [], shares: [], hashrate: [], networkHashrate: [] });
+}
+function userHistFor(key: string): UserHistory {
+    return (sourceUserHistory[key] ??= new Map());
+}
+function workerHistFor(key: string): WorkerHistory {
+    return (sourceWorkerHistory[key] ??= new Map());
+}
 
 export async function startPoller(io: Server) {
-    console.log(`Starting Poller watching ${USERS_DIR}`);
+    console.log(`Starting Poller — solo: ${SOLO_LOGS_DIR}${POOL_LOGS_DIR ? `, pool: ${POOL_LOGS_DIR}` : ' (pool source not configured)'}`);
 
     // Ensure Electrum connection
     try {
@@ -63,52 +78,40 @@ export async function startPoller(io: Server) {
     }, POLLING_INTERVAL_MS);
 }
 
-// Separate function for the cycle logic
 async function poll(io: Server) {
-    if (!fs.existsSync(USERS_DIR)) {
-        console.warn("Users dir missing!");
-        return;
+    if (!electrum.isConnected) {
+        electrum.connect().catch(e => console.error("Electrum reconnect failed:", e));
     }
 
-    const files = fs.readdirSync(USERS_DIR).filter(f => f.startsWith('bfx:') || f.includes(':'));
+    // --- Balance round-robin (shared, 1 address per tick across both sources) ---
+    refreshOneBalance();
 
-    // --- Round-Robin Balance Fetcher (1 user per tick) ---
-    if (files.length > 0) {
-        const targetFile = files[nextUserIndex % files.length];
-        nextUserIndex = (nextUserIndex + 1) % files.length;
-        const targetAddress = targetFile;
+    // --- Chain-wide network stats (difficulty + est. network hashrate), same for both sources ---
+    const network = await getNetworkStats();
 
-        if (isValidAddress(targetAddress)) {
-            const now = Date.now();
-            const cached = balanceCache.get(targetAddress);
-            const isStale = !cached || (now - cached.timestamp > 60000);
+    // --- Per-source collection ---
+    const solo = collectSource(SOLO_LOGS_DIR, 'solo', network);
+    const pool = POOL_LOGS_DIR && fs.existsSync(path.join(POOL_LOGS_DIR, 'users'))
+        ? collectSource(POOL_LOGS_DIR, 'pool', network)
+        : null;
 
-            // Fetch only if stale, not pending, and Electrum is NOT busy
-            if (isStale && !pendingBalanceFetches.has(targetAddress) && !electrumBusy) {
-                electrumBusy = true; // ACQUIRE LOCK
-                pendingBalanceFetches.add(targetAddress);
+    console.log(`Emitting stats — solo: ${solo.global.users} users / ${solo.blocks.length} blocks` +
+        (pool ? `, pool: ${pool.global.users} users / ${pool.blocks.length} blocks` : ', pool: n/a'));
 
-                electrum.getBalance(targetAddress)
-                    .then(bal => {
-                        if (bal) {
-                            console.log(`Updated balance for ${targetAddress}`);
-                            balanceCache.set(targetAddress, { balance: bal, timestamp: Date.now() });
-                        }
-                    })
-                    .catch(e => {
-                        console.warn(`Balance check skipped for ${targetAddress} (slow response):`, e.message);
-                        balanceCache.set(targetAddress, {
-                            balance: cached ? cached.balance : { confirmed: 0, unconfirmed: 0 },
-                            timestamp: Date.now()
-                        });
-                    })
-                    .finally(() => {
-                        pendingBalanceFetches.delete(targetAddress);
-                        electrumBusy = false; // RELEASE LOCK
-                    });
-            }
-        }
+    io.emit('stats', solo);        // solo payload (unchanged shape — other pages rely on it)
+    io.emit('poolStats', pool);    // pool payload, or null when not configured / no data yet
+
+    try {
+        await redis.set('latest_stats', JSON.stringify(solo));
+        await redis.set('latest_pool_stats', JSON.stringify(pool));
+    } catch (e) {
+        console.error("Redis save failed:", e);
     }
+}
+
+// Collect a full stats payload for ONE ckpool source (a logs directory).
+function collectSource(logsDir: string, key: string, network: { difficulty: number, networkHashrate: number }) {
+    const usersDir = path.join(logsDir, 'users');
 
     const globalStats = {
         workers: 0,
@@ -122,19 +125,21 @@ async function poll(io: Server) {
         rejected: 0,
         bestshare: 0,
         runtime: 0,
-        networkHashrate: 0,
-        difficulty: 0,
+        networkHashrate: network.networkHashrate,
+        difficulty: network.difficulty,
         luck: 0,
     };
 
-    const usersData = [];
+    const usersData: any[] = [];
+    const uHistMap = userHistFor(key);
+    const wHistMap = workerHistFor(key);
 
-    if (!electrum.isConnected) {
-        electrum.connect().catch(e => console.error("Electrum reconnect failed:", e));
-    }
+    const files = fs.existsSync(usersDir)
+        ? fs.readdirSync(usersDir).filter(f => f.startsWith('bfx:') || f.includes(':'))
+        : [];
 
     for (const file of files) {
-        const filePath = path.join(USERS_DIR, file);
+        const filePath = path.join(usersDir, file);
         try {
             const content = fs.readFileSync(filePath, 'utf-8');
             const data = JSON.parse(content);
@@ -142,8 +147,8 @@ async function poll(io: Server) {
 
             if (!isValidAddress(address)) continue;
 
-            // Skip miners from the previous (pre-re-anchor) chain so they don't show as active
-            // or inflate the user/worker counts. Returning miners reappear on their next share.
+            // Skip miners from the previous (pre-re-anchor) chain so they don't show as
+            // active or inflate the counts. Returning miners reappear on their next share.
             const lastShare = Number(data.lastshare || 0);
             if (POOL_ACTIVE_SINCE > 0 && lastShare > 0 && lastShare < POOL_ACTIVE_SINCE) continue;
             if (POOL_ACTIVE_WINDOW_SEC > 0 && lastShare > 0 && (Date.now() / 1000 - lastShare) > POOL_ACTIVE_WINDOW_SEC) continue;
@@ -163,15 +168,10 @@ async function poll(io: Server) {
             const cached = balanceCache.get(address);
             if (cached) balance = cached.balance;
 
-            if (!userHistory.has(address)) {
-                userHistory.set(address, { workers: [], shares: [], hashrate: [], balance: [] });
+            if (!uHistMap.has(address)) {
+                uHistMap.set(address, { workers: [], shares: [], hashrate: [], balance: [] });
             }
-            const uHist = userHistory.get(address)!;
-
-            // DEBUG: Inspect data keys once
-            if (address.includes('fzsag') && Math.random() < 0.05) {
-                console.log(`[Poller] Debug User Data for ${address}:`, JSON.stringify(data, null, 2).slice(0, 200));
-            }
+            const uHist = uHistMap.get(address)!;
 
             const hrVal = Number(parseHashrate(data.hashrate5m || "0"));
             const balVal = balance ? (balance.confirmed || 0) : 0;
@@ -190,10 +190,10 @@ async function poll(io: Server) {
             if (data.worker && Array.isArray(data.worker)) {
                 for (const w of data.worker) {
                     const workerKey = `${address}:${w.workername}`;
-                    if (!workerHistory.has(workerKey)) {
-                        workerHistory.set(workerKey, { hashrate: [], shares: [] });
+                    if (!wHistMap.has(workerKey)) {
+                        wHistMap.set(workerKey, { hashrate: [], shares: [] });
                     }
-                    const wHist = workerHistory.get(workerKey)!;
+                    const wHist = wHistMap.get(workerKey)!;
 
                     const wHashrate = Number(parseHashrate(w.hashrate5m || "0"));
                     const wShares = w.shares || 0;
@@ -204,18 +204,14 @@ async function poll(io: Server) {
                     if (wHist.hashrate.length > 50) wHist.hashrate.shift();
                     if (wHist.shares.length > 50) wHist.shares.shift();
 
-                    // Attach history to the worker object so it gets sent to frontend
-                    w.history = {
-                        hashrate: wHist.hashrate,
-                        shares: wHist.shares
-                    };
+                    w.history = { hashrate: wHist.hashrate, shares: wHist.shares };
                 }
             }
 
             usersData.push({
                 address,
-                ...data, // This likely contains 'workers' (int) and 'worker' (array), but maybe 'worker' is being lost?
-                workerDetails: data.worker || [], // Renamed explicitly to avoid confusion
+                ...data,
+                workerDetails: data.worker || [],
                 balance,
                 history: {
                     hashrate: uHist.hashrate,
@@ -224,138 +220,49 @@ async function poll(io: Server) {
                     balance: uHist.balance.map(val => val / 100000000)
                 }
             });
-            if (address.includes('fzsag')) {
-                console.log(`[Poller] Validating user ${address}: Workers found: ${data.worker?.length || 0}`);
-            }
         } catch (e) { }
     }
 
-    const ROOT_LOGS_DIR = path.dirname(USERS_DIR);
-    const CKPOOL_LOG = path.join(ROOT_LOGS_DIR, 'ckpool.log');
+    // --- Solved blocks from this source's ckpool.log ---
+    const blocks = readBlocks(path.join(logsDir, 'ckpool.log'));
 
-    let blocks: any[] = [];
-    if (fs.existsSync(CKPOOL_LOG)) {
+    // --- Runtime (uptime) from this source's pool.status ---
+    const poolStatusFile = path.join(logsDir, 'pool', 'pool.status');
+    if (fs.existsSync(poolStatusFile)) {
         try {
-            // Read only last 1MB efficiently
-            const stats = fs.statSync(CKPOOL_LOG);
-            const size = stats.size;
-            const bufferSize = 5 * 1024 * 1024; // 5MB to ensure we cover 24h
-            const start = Math.max(0, size - bufferSize);
-            const buffer = Buffer.alloc(size - start);
-            const fd = fs.openSync(CKPOOL_LOG, 'r');
-            fs.readSync(fd, buffer, 0, buffer.length, start);
-            fs.closeSync(fd);
-            const content = buffer.toString('utf-8');
-
-            const lines = content.split('\n');
-            const solvedRegex = /^\[(.*?)\] Solved and confirmed block (\d+) by (.*)$/;
-
-            blocks = lines
-                .map(line => line.match(solvedRegex))
-                .filter(match => match !== null)
-                .map(match => {
-                    const fullSolver = match![3];
-                    const solverAddress = fullSolver.split('.')[0];
-                    return {
-                        timestamp: match![1],
-                        height: parseInt(match![2]),
-                        solver: solverAddress,
-                        worker: fullSolver, // Store full name like 'bfx:...node-2'
-                        time: new Date(match![1]).getTime()
-                    };
-                })
-                .reverse()
-                .slice(0, 2000); // Keep enough for 24h stats (at 1m blocks = 1440/day)
-
-            fetchMissingTxids(blocks);
-
-            for (const block of blocks) {
-                block.txid = txidCache.get(block.height);
-            }
-        } catch (e) {
-            console.error("Error reading ckpool log:", e);
-        }
-    }
-
-    const POOL_STATUS_FILE = path.join(LOGS_DIR, 'pool', 'pool.status');
-    if (fs.existsSync(POOL_STATUS_FILE)) {
-        try {
-            const content = fs.readFileSync(POOL_STATUS_FILE, 'utf-8');
-            const lines = content.split('\n');
+            const lines = fs.readFileSync(poolStatusFile, 'utf-8').split('\n');
             for (const line of lines) {
                 if (!line.trim()) continue;
                 try {
-                    const data = JSON.parse(line);
-                    if (typeof data.runtime === 'number') {
-                        globalStats.runtime = data.runtime;
-                    }
+                    const d = JSON.parse(line);
+                    if (typeof d.runtime === 'number') globalStats.runtime = d.runtime;
                 } catch (e) { }
             }
         } catch (e) {
-            console.error("Error reading pool.status:", e);
+            console.error(`Error reading pool.status for ${key}:`, e);
         }
     }
 
-    // --- Network Stats (Difficulty/Hashrate) ---
-    try {
-        const header = await electrum.getLatestHeader();
-        // Electrum's blockchain.headers.subscribe returns { height, hex } — the 80-byte
-        // block header, NOT a parsed object. nBits is a 4-byte field at byte offset 72
-        // (hex offset 144), little-endian. (Some servers may also expose header.bits.)
-        let bits: number | undefined;
-        if (header && typeof header.bits === 'number') {
-            bits = header.bits;
-        } else if (header?.hex && header.hex.length >= 152) {
-            const le = header.hex.substr(144, 8);
-            bits = parseInt(le.match(/../g)!.reverse().join(''), 16);
-        }
-
-        if (bits) {
-            // Decode compact bits: exponent (high byte) + 23-bit mantissa.
-            const exponent = bits >> 24;
-            const coefficient = bits & 0x007fffff;
-
-            // Difficulty = diff-1 target (0x1d00ffff) / current target
-            //            = (0x00ffff / coefficient) * 2^(8*(0x1d - exponent))
-            const shift = 8 * (0x1d - exponent);
-            const diff = (0x00ffff / coefficient) * Math.pow(2, shift);
-
-            globalStats.difficulty = diff;
-            // Network hashrate estimate = difficulty * 2^32 / target block time.
-            // BitFinite targets 5-minute (300s) blocks.
-            globalStats.networkHashrate = (diff * Math.pow(2, 32)) / 300;
-        }
-    } catch (e) {
-        // console.error("Failed to fetch network stats:", e);
-    }
-
-    // --- Pool Luck Calculation (24h) ---
-    const diff = globalStats.difficulty;
-    if (globalStats.hashrate1d > 0 && diff > 0) {
-        const poolHashrate24h = Number(globalStats.hashrate1d);
-        const expected24h = (poolHashrate24h * 86400) / (diff * Math.pow(2, 32));
-
-        // Count actual blocks in last 24h
-        const now = Date.now();
-        const oneDayAgo = now - (24 * 60 * 60 * 1000);
+    // --- Pool luck (24h) — this source's hashrate vs the chain difficulty ---
+    if (globalStats.hashrate1d > 0 && network.difficulty > 0) {
+        const expected24h = (Number(globalStats.hashrate1d) * 86400) / (network.difficulty * Math.pow(2, 32));
+        const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);
         const actual24h = blocks.filter(b => b.time > oneDayAgo).length;
-
-        if (expected24h > 0) {
-            globalStats.luck = (actual24h / expected24h) * 100;
-        }
+        if (expected24h > 0) globalStats.luck = (actual24h / expected24h) * 100;
     }
 
-    history.workers.push(globalStats.workers);
-    history.shares.push(globalStats.accepted);
-    history.hashrate.push(Number(globalStats.hashrate5m));
-    history.networkHashrate.push(globalStats.networkHashrate);
+    // --- Rolling in-memory history for this source's sparklines ---
+    const hist = histFor(key);
+    hist.workers.push(globalStats.workers);
+    hist.shares.push(globalStats.accepted);
+    hist.hashrate.push(Number(globalStats.hashrate5m));
+    hist.networkHashrate.push(globalStats.networkHashrate);
+    if (hist.workers.length > 50) hist.workers.shift();
+    if (hist.shares.length > 50) hist.shares.shift();
+    if (hist.hashrate.length > 50) hist.hashrate.shift();
+    if (hist.networkHashrate.length > 50) hist.networkHashrate.shift();
 
-    if (history.workers.length > 50) history.workers.shift();
-    if (history.shares.length > 50) history.shares.shift();
-    if (history.hashrate.length > 50) history.hashrate.shift();
-    if (history.networkHashrate.length > 50) history.networkHashrate.shift();
-
-    const broadcastData = {
+    return {
         global: {
             users: globalStats.users,
             workers: globalStats.workers,
@@ -389,25 +296,121 @@ async function poll(io: Server) {
             history: u.history,
         })),
         blocks,
-        history
+        history: hist,
     };
+}
 
-    console.log(`Emitting stats with ${globalStats.users} users and ${blocks.length} blocks`);
-    io.emit('stats', broadcastData);
-
-    // console.log("Saving to Redis...");
+// Read solved blocks (last ~24h) from a ckpool.log, newest first, resolving txids via cache.
+function readBlocks(ckpoolLog: string): any[] {
+    if (!fs.existsSync(ckpoolLog)) return [];
     try {
-        await redis.set('latest_stats', JSON.stringify(broadcastData));
-        // console.log("Redis saved.");
+        const size = fs.statSync(ckpoolLog).size;
+        const bufferSize = 5 * 1024 * 1024; // 5MB covers >24h at 5m blocks
+        const start = Math.max(0, size - bufferSize);
+        const buffer = Buffer.alloc(size - start);
+        const fd = fs.openSync(ckpoolLog, 'r');
+        fs.readSync(fd, buffer, 0, buffer.length, start);
+        fs.closeSync(fd);
+
+        const solvedRegex = /^\[(.*?)\] Solved and confirmed block (\d+) by (.*)$/;
+        const blocks = buffer.toString('utf-8').split('\n')
+            .map(line => line.match(solvedRegex))
+            .filter(match => match !== null)
+            .map(match => {
+                const fullSolver = match![3];
+                return {
+                    timestamp: match![1],
+                    height: parseInt(match![2]),
+                    solver: fullSolver.split('.')[0],
+                    worker: fullSolver,
+                    time: new Date(match![1]).getTime(),
+                    txid: undefined as string | undefined,
+                };
+            })
+            .reverse()
+            .slice(0, 2000);
+
+        fetchMissingTxids(blocks);
+        for (const block of blocks) block.txid = txidCache.get(block.height);
+        return blocks;
     } catch (e) {
-        console.error("Redis save failed:", e);
+        console.error("Error reading ckpool log:", e);
+        return [];
     }
 }
 
-const pendingFetches = new Set<string>();
-const failedTxidLookups = new Set<number>(); // persistent failure cache
+// Compute chain-wide network stats from the latest Electrum header. Same for all sources.
+async function getNetworkStats(): Promise<{ difficulty: number, networkHashrate: number }> {
+    try {
+        const header = await electrum.getLatestHeader();
+        // blockchain.headers.subscribe returns the 80-byte header hex; nBits is a 4-byte
+        // field at byte offset 72 (hex offset 144), little-endian.
+        let bits: number | undefined;
+        if (header && typeof header.bits === 'number') {
+            bits = header.bits;
+        } else if (header?.hex && header.hex.length >= 152) {
+            const le = header.hex.substr(144, 8);
+            bits = parseInt(le.match(/../g)!.reverse().join(''), 16);
+        }
+        if (bits) {
+            const exponent = bits >> 24;
+            const coefficient = bits & 0x007fffff;
+            const shift = 8 * (0x1d - exponent);
+            const difficulty = (0x00ffff / coefficient) * Math.pow(2, shift);
+            // BitFinite targets 5-minute (300s) blocks.
+            const networkHashrate = (difficulty * Math.pow(2, 32)) / 300;
+            return { difficulty, networkHashrate };
+        }
+    } catch (e) {
+        // network stats are best-effort
+    }
+    return { difficulty: 0, networkHashrate: 0 };
+}
 
-// Cache for solver histories to avoid re-fetching too often if they mine multiple blocks
+// Refresh one address's balance per tick (round-robin across BOTH sources' users),
+// serialized behind the Electrum busy lock.
+function refreshOneBalance() {
+    const dirs = [path.join(SOLO_LOGS_DIR, 'users')];
+    if (POOL_LOGS_DIR) dirs.push(path.join(POOL_LOGS_DIR, 'users'));
+
+    const files: string[] = [];
+    for (const d of dirs) {
+        if (!fs.existsSync(d)) continue;
+        for (const f of fs.readdirSync(d)) {
+            if ((f.startsWith('bfx:') || f.includes(':')) && !files.includes(f)) files.push(f);
+        }
+    }
+    if (files.length === 0) return;
+
+    const targetAddress = files[nextUserIndex % files.length];
+    nextUserIndex = (nextUserIndex + 1) % files.length;
+    if (!isValidAddress(targetAddress)) return;
+
+    const now = Date.now();
+    const cached = balanceCache.get(targetAddress);
+    const isStale = !cached || (now - cached.timestamp > 60000);
+    if (!isStale || pendingBalanceFetches.has(targetAddress) || electrumBusy) return;
+
+    electrumBusy = true; // ACQUIRE LOCK
+    pendingBalanceFetches.add(targetAddress);
+    electrum.getBalance(targetAddress)
+        .then(bal => {
+            if (bal) balanceCache.set(targetAddress, { balance: bal, timestamp: Date.now() });
+        })
+        .catch(e => {
+            balanceCache.set(targetAddress, {
+                balance: cached ? cached.balance : { confirmed: 0, unconfirmed: 0 },
+                timestamp: Date.now(),
+            });
+        })
+        .finally(() => {
+            pendingBalanceFetches.delete(targetAddress);
+            electrumBusy = false; // RELEASE LOCK
+        });
+}
+
+const pendingFetches = new Set<string>();
+const failedTxidLookups = new Set<number>();
 const solverHistoryCache = new Map<string, { history: any[], timestamp: number }>();
 
 async function fetchMissingTxids(blocks: any[]) {
@@ -420,15 +423,13 @@ async function fetchMissingTxids(blocks: any[]) {
     if (missing.length === 0) return;
     if (electrumBusy) return;
 
-    // Group by solver
     const solvers = new Set(missing.map(b => b.solver));
-    const batchSolvers = Array.from(solvers).slice(0, 2); // Process max 2 solvers per tick
+    const batchSolvers = Array.from(solvers).slice(0, 2);
 
     electrumBusy = true;
     try {
         for (const solver of batchSolvers) {
-            // Check cache first (valid for 10 seconds)
-            let history = [];
+            let history: any[] = [];
             const cached = solverHistoryCache.get(solver);
             const now = Date.now();
 
@@ -442,31 +443,17 @@ async function fetchMissingTxids(blocks: any[]) {
                     }
                 } catch (e) {
                     console.warn(`Failed to fetch history for solver ${solver}`);
-                    // Don't mark blocks as failed yet, retry later
                     continue;
                 }
             }
 
-            // Map height -> txid
             const heightMap = new Map<number, string>();
-            for (const item of history) {
-                heightMap.set(item.height, item.tx_hash);
-            }
+            for (const item of history) heightMap.set(item.height, item.tx_hash);
 
-            // Update blocks for this solver
             const solverBlocks = missing.filter(b => b.solver === solver);
             for (const block of solverBlocks) {
                 const txid = heightMap.get(block.height);
-                if (txid) {
-                    txidCache.set(block.height, txid);
-                    console.log(`Found TXID for block ${block.height} via solver history`);
-                } else {
-                    // If we have full history and stil can't find it, marking as failed is risky 
-                    // because maybe the history is just lagging slightly? 
-                    // But usually getHistory is up to date.
-                    // Let's increment a retry counter or just leave it for now.
-                    // If we assume history is authoritative, we could mark failed.
-                }
+                if (txid) txidCache.set(block.height, txid);
             }
         }
     } finally {

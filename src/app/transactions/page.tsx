@@ -1,6 +1,8 @@
 "use client";
 
 import { useSocket } from "@/hooks/useSocket";
+import { useMiningMode } from "@/store/miningMode";
+import MiningTabs, { PoolEmpty } from "@/components/MiningTabs";
 import {
     Card,
     CardContent,
@@ -21,10 +23,13 @@ import { Coins, Boxes, Layers } from "lucide-react";
 import React from 'react';
 
 export default function PayoutsPage() {
-    const { isConnected, stats } = useSocket();
+    const { isConnected, stats, poolStats } = useSocket();
+    const { mode } = useMiningMode();
 
     const [currentPage, setCurrentPage] = React.useState(1);
     const ITEMS_PER_PAGE = 20;
+
+    React.useEffect(() => { setCurrentPage(1); }, [mode]);
 
     if (!stats) {
         return (
@@ -38,9 +43,10 @@ export default function PayoutsPage() {
         );
     }
 
-    const { blocks } = stats;
+    const active = mode === "solo" ? stats : poolStats;
+    const blocks = active?.blocks ?? [];
 
-    // Each row is a block the solo pool solved; the payout is that block's coinbase reward.
+    // Each row is a block this source solved; the payout is that block's coinbase reward.
     const now = Date.now();
     const dayBlocks = (blocks || []).filter((b: any) => b.time && now - b.time < 86_400_000);
     const rewarded24h = dayBlocks.reduce((sum: number, b: any) => sum + getBlockReward(b.height), 0);
@@ -51,78 +57,87 @@ export default function PayoutsPage() {
 
     return (
         <div className="mt-8 space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <SummaryCard icon={<Boxes size={16} className="text-primary" />} label="Blocks Found (24h)" value={dayBlocks.length.toLocaleString()} />
-                <SummaryCard icon={<Coins size={16} className="text-primary" />} label="Rewarded (24h)" value={formatBFX(rewarded24h)} />
-                <SummaryCard icon={<Layers size={16} className="text-primary" />} label="Latest Block" value={latestHeight != null ? `#${latestHeight}` : '—'} />
-            </div>
+            <MiningTabs solo={stats} pool={poolStats} />
 
-            <Card>
-                <CardHeader className="space-y-2 pb-6">
-                    <div className="flex flex-row items-center justify-between space-y-0">
-                        <CardTitle className="text-xl font-bold text-foreground flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-primary"></span>
-                            RECENT PAYOUTS
-                        </CardTitle>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-primary' : 'bg-destructive'}`}></span>
-                            {isConnected ? 'Live' : 'Offline'}
-                        </div>
+            {!active ? (
+                <PoolEmpty />
+            ) : (
+                <>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <SummaryCard icon={<Boxes size={16} className="text-primary" />} label="Blocks Found (24h)" value={dayBlocks.length.toLocaleString()} />
+                        <SummaryCard icon={<Coins size={16} className="text-primary" />} label="Rewarded (24h)" value={formatBFX(rewarded24h)} />
+                        <SummaryCard icon={<Layers size={16} className="text-primary" />} label="Latest Block" value={latestHeight != null ? `#${latestHeight}` : '—'} />
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                        Coinbase rewards paid to miners who solved a block on the BitFinite solo pool.
-                        Each reward is the block subsidy — <span className="font-semibold text-foreground">50 BFX</span>,
-                        halving every 210,000 blocks.
-                    </p>
-                </CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead className="text-xs font-bold font-sans uppercase text-muted-foreground">Time</TableHead>
-                                <TableHead className="text-xs font-bold font-sans uppercase text-muted-foreground">Receiver</TableHead>
-                                <TableHead className="text-right text-xs font-bold font-sans uppercase text-muted-foreground">Reward</TableHead>
-                                <TableHead className="hidden md:table-cell text-right text-xs font-bold font-sans uppercase text-muted-foreground">TXID (Block Height)</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {paginatedBlocks && paginatedBlocks.length > 0 ? (
-                                paginatedBlocks.map((block: any, i: number) => {
-                                    const href = `https://explorer.bitfinitechain.org/${block.txid ? 'tx/' + block.txid : 'block/' + block.height}`;
-                                    return (
-                                        <TableRow key={i}>
-                                            <TableCell className="font-bold font-mono text-xs sm:text-sm whitespace-nowrap">{new Date(block.time).toLocaleString()}</TableCell>
-                                            <TableCell className="font-bold font-mono text-xs sm:text-sm" title={block.solver}>
-                                                <a href={href} target="_blank" rel="noopener noreferrer" className="hover:underline text-primary">
-                                                    {obfuscateAddress(block.solver)}
-                                                </a>
-                                            </TableCell>
-                                            <TableCell className="text-right font-bold font-mono text-xs sm:text-sm text-primary whitespace-nowrap">{formatBFX(getBlockReward(block.height))}</TableCell>
-                                            <TableCell className="hidden md:table-cell text-right font-bold font-mono text-sm text-muted-foreground">
-                                                <a href={href} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                                                    {block.txid ? `View Transaction` : `Height ${block.height} (Coinbase)`}
-                                                </a>
+
+                    <Card>
+                        <CardHeader className="space-y-2 pb-6">
+                            <div className="flex flex-row items-center justify-between space-y-0">
+                                <CardTitle className="text-xl font-bold text-foreground flex items-center gap-2">
+                                    <span className="w-2 h-2 rounded-full bg-primary"></span>
+                                    RECENT PAYOUTS
+                                </CardTitle>
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-primary' : 'bg-destructive'}`}></span>
+                                    {isConnected ? 'Live' : 'Offline'}
+                                </div>
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                                Coinbase rewards paid to miners who solved a block on the BitFinite{" "}
+                                {mode === "solo" ? "solo" : "shared"} pool.
+                                Each reward is the block subsidy — <span className="font-semibold text-foreground">50 BFX</span>,
+                                halving every 210,000 blocks.
+                            </p>
+                        </CardHeader>
+                        <CardContent>
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead className="text-xs font-bold font-sans uppercase text-muted-foreground">Time</TableHead>
+                                        <TableHead className="text-xs font-bold font-sans uppercase text-muted-foreground">Receiver</TableHead>
+                                        <TableHead className="text-right text-xs font-bold font-sans uppercase text-muted-foreground">Reward</TableHead>
+                                        <TableHead className="hidden md:table-cell text-right text-xs font-bold font-sans uppercase text-muted-foreground">TXID (Block Height)</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {paginatedBlocks && paginatedBlocks.length > 0 ? (
+                                        paginatedBlocks.map((block: any, i: number) => {
+                                            const href = `https://explorer.bitfinitechain.org/${block.txid ? 'tx/' + block.txid : 'block/' + block.height}`;
+                                            return (
+                                                <TableRow key={i}>
+                                                    <TableCell className="font-bold font-mono text-xs sm:text-sm whitespace-nowrap">{new Date(block.time).toLocaleString()}</TableCell>
+                                                    <TableCell className="font-bold font-mono text-xs sm:text-sm" title={block.solver}>
+                                                        <a href={href} target="_blank" rel="noopener noreferrer" className="hover:underline text-primary">
+                                                            {obfuscateAddress(block.solver)}
+                                                        </a>
+                                                    </TableCell>
+                                                    <TableCell className="text-right font-bold font-mono text-xs sm:text-sm text-primary whitespace-nowrap">{formatBFX(getBlockReward(block.height))}</TableCell>
+                                                    <TableCell className="hidden md:table-cell text-right font-bold font-mono text-sm text-muted-foreground">
+                                                        <a href={href} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                                                            {block.txid ? `View Transaction` : `Height ${block.height} (Coinbase)`}
+                                                        </a>
+                                                    </TableCell>
+                                                </TableRow>
+                                            );
+                                        })
+                                    ) : (
+                                        <TableRow>
+                                            <TableCell colSpan={4} className="h-24 text-center">
+                                                No payouts found recently.
                                             </TableCell>
                                         </TableRow>
-                                    );
-                                })
-                            ) : (
-                                <TableRow>
-                                    <TableCell colSpan={4} className="h-24 text-center">
-                                        No payouts found recently.
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
+                                    )}
+                                </TableBody>
+                            </Table>
 
-                    <Pagination
-                        currentPage={currentPage}
-                        totalPages={totalPages}
-                        onPageChange={setCurrentPage}
-                    />
-                </CardContent>
-            </Card>
+                            <Pagination
+                                currentPage={currentPage}
+                                totalPages={totalPages}
+                                onPageChange={setCurrentPage}
+                            />
+                        </CardContent>
+                    </Card>
+                </>
+            )}
         </div>
     );
 }
