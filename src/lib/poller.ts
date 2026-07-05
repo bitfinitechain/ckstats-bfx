@@ -91,9 +91,15 @@ async function poll(io: Server) {
 
     // --- Per-source collection ---
     const solo = collectSource(SOLO_LOGS_DIR, 'solo', network);
-    const pool = POOL_LOGS_DIR && fs.existsSync(path.join(POOL_LOGS_DIR, 'users'))
-        ? collectSource(POOL_LOGS_DIR, 'pool', network)
-        : null;
+    // Only surface the Pool payload once there's real activity (a miner or a
+    // solved block); otherwise emit null so the UI shows a stable "coming online"
+    // state instead of flickering empty zero-tiles as the synced logs dir appears
+    // and disappears. collectSource tolerates a missing dir (returns zeros).
+    let pool = null;
+    if (POOL_LOGS_DIR) {
+        const p = collectSource(POOL_LOGS_DIR, 'pool', network);
+        if (p.global.users > 0 || p.blocks.length > 0) pool = p;
+    }
 
     console.log(`Emitting stats — solo: ${solo.global.users} users / ${solo.blocks.length} blocks` +
         (pool ? `, pool: ${pool.global.users} users / ${pool.blocks.length} blocks` : ', pool: n/a'));
