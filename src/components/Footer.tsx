@@ -7,7 +7,7 @@ import { Github, Globe, Mail } from "lucide-react";
 export default function Footer() {
     return (
         <footer className="border-t border-border bg-muted/50">
-            <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+            <div className="container mx-auto py-12 px-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     <div>
                         <Link href="/" className="flex items-center space-x-3 mb-4">
