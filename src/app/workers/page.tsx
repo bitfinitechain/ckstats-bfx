@@ -5,6 +5,7 @@ import { useMiningMode } from "@/store/miningMode";
 import { formatHashrate, obfuscateAddress } from "@/lib/utils";
 import { WorkerSearch } from "@/components/WorkerSearch";
 import MiningTabs, { PoolEmpty } from "@/components/MiningTabs";
+import MisoLoader from "@/components/MisoLoader";
 import {
     Card,
     CardContent,
@@ -27,7 +28,7 @@ export default function WorkersPage() {
     if (!stats) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                <MisoLoader size={120} className="mx-auto" />
                 <p className="text-muted-foreground">Loading worker statistics...</p>
                 <div className="text-xs text-muted-foreground">
                     Socket: {isConnected ? "Connected" : "Disconnected"}

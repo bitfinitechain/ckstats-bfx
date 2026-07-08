@@ -5,6 +5,7 @@ import { useSocket } from '@/hooks/useSocket';
 import { hashrateSuffix, abbreviateNumber, diffToNowDHM, secondsToDHM, formatHashrate } from '@/lib/utils'; // Verify imports or re-implement
 import { Card, CardContent } from '@/components/ui/card';
 import MiniChart from '@/components/MiniChart';
+import MisoLoader from '@/components/MisoLoader';
 import { Activity, CheckCircle, Info, Users, ArrowLeft, Cpu } from 'lucide-react';
 import Link from 'next/link';
 
@@ -73,7 +74,12 @@ export default function WorkerPage({ params }: { params: Promise<{ address: stri
                 </div>
             )
         }
-        return <div className="p-8 text-center text-muted-foreground">Loading stats...</div>;
+        return (
+            <div className="flex flex-col items-center justify-center gap-3 p-8 text-muted-foreground">
+                <MisoLoader size={80} />
+                <span>Loading stats...</span>
+            </div>
+        );
     }
 
     // Reuse similar logic to Tiles for formatting

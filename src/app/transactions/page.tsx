@@ -18,6 +18,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Pagination } from "@/components/Pagination";
+import MisoLoader from "@/components/MisoLoader";
 import { getBlockReward, formatBFX, obfuscateAddress } from "@/lib/utils";
 import { Coins, Boxes, Layers } from "lucide-react";
 import React from 'react';
@@ -34,7 +35,7 @@ export default function PayoutsPage() {
     if (!stats) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                <MisoLoader size={120} className="mx-auto" />
                 <p className="text-muted-foreground">Loading payout history...</p>
                 <div className="text-xs text-muted-foreground">
                     Socket: {isConnected ? "Connected" : "Disconnected"}
