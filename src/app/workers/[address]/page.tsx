@@ -54,7 +54,12 @@ export default function WorkerPage({ params }: { params: Promise<{ address: stri
     }, [stats, decodedAddress]);
 
     if (!isConnected && !worker) {
-        return <div className="p-8 text-center text-muted-foreground">Connecting to server...</div>;
+        return (
+            <div className="flex flex-col items-center justify-center gap-3 p-8 text-muted-foreground">
+                <MisoLoader size={80} />
+                <span>Connecting to server...</span>
+            </div>
+        );
     }
 
     if (!worker) {

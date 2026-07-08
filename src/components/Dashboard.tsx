@@ -5,6 +5,7 @@ import { useMiningMode } from "@/store/miningMode";
 import { formatHashrate, diffToNowDHM, obfuscateAddress } from "@/lib/utils";
 import Tiles from "@/components/Tiles";
 import MiningTabs, { PoolEmpty } from "@/components/MiningTabs";
+import MisoLoader from "@/components/MisoLoader";
 
 import {
     Card,
@@ -28,7 +29,8 @@ export default function Dashboard() {
     // Initial connection — no data at all yet.
     if (!stats) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
+            <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+                <MisoLoader size={120} className="mx-auto" />
                 <div className="flex items-center gap-2 text-xl font-bold text-muted-foreground animate-pulse">
                     <span className={`w-3 h-3 rounded-full ${isConnected ? 'bg-primary' : 'bg-destructive'}`}></span>
                     <span>{isConnected ? 'Connecting to pool...' : 'Waiting for connection...'}</span>

@@ -58,7 +58,12 @@ export default function IndividualWorkerPage({ params }: { params: Promise<{ add
     const paginatedBlocks = minerBlocks.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
     if (!isConnected && !user) {
-        return <div className="p-8 text-center text-muted-foreground">Connecting to server...</div>;
+        return (
+            <div className="flex flex-col items-center justify-center gap-3 p-8 text-muted-foreground">
+                <MisoLoader size={80} />
+                <span>Connecting to server...</span>
+            </div>
+        );
     }
 
     if (!user) {
