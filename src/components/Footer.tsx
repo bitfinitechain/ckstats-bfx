@@ -30,9 +30,9 @@ export default function Footer() {
                                 <Globe className="w-4 h-4 mr-2" />
                                 bitfinitechain.org
                             </a>
-                            <a href="mailto:support@bitfinitechain.org" className="flex items-center hover:text-primary transition-colors">
+                            <a href="mailto:bitfinitechain@proton.me" className="flex items-center hover:text-primary transition-colors">
                                 <Mail className="w-4 h-4 mr-2" />
-                                support@bitfinitechain.org
+                                bitfinitechain@proton.me
                             </a>
                         </div>
                     </div>
