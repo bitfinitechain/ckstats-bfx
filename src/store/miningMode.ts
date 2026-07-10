@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type MiningMode = "solo" | "pool";
+export type MiningMode = "solo" | "pool" | "highdiff";
 
 // Shared Solo/Pool selection across Dashboard / Workers / Blocks / Payouts.
 // In-memory (survives client-side navigation; resets to solo on a hard reload) —

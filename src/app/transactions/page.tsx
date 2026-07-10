@@ -2,7 +2,7 @@
 
 import { useSocket } from "@/hooks/useSocket";
 import { useMiningMode } from "@/store/miningMode";
-import MiningTabs, { PoolEmpty } from "@/components/MiningTabs";
+import MiningTabs, { PoolEmpty, HighDiffEmpty } from "@/components/MiningTabs";
 import {
     Card,
     CardContent,
@@ -24,7 +24,7 @@ import { Coins, Boxes, Layers } from "lucide-react";
 import React from 'react';
 
 export default function PayoutsPage() {
-    const { isConnected, stats, poolStats } = useSocket();
+    const { isConnected, stats, poolStats, rentalStats } = useSocket();
     const { mode } = useMiningMode();
 
     const [currentPage, setCurrentPage] = React.useState(1);
@@ -44,7 +44,7 @@ export default function PayoutsPage() {
         );
     }
 
-    const active = mode === "solo" ? stats : poolStats;
+    const active = mode === "solo" ? stats : mode === "pool" ? poolStats : rentalStats;
     const blocks = active?.blocks ?? [];
 
     // Each row is a block this source solved; the payout is that block's coinbase reward.
@@ -58,10 +58,10 @@ export default function PayoutsPage() {
 
     return (
         <div className="mt-8 space-y-6">
-            <MiningTabs solo={stats} pool={poolStats} />
+            <MiningTabs solo={stats} pool={poolStats} highdiff={rentalStats} />
 
             {!active ? (
-                <PoolEmpty />
+                mode === "highdiff" ? <HighDiffEmpty /> : <PoolEmpty />
             ) : (
                 <>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -84,7 +84,7 @@ export default function PayoutsPage() {
                             </div>
                             <p className="text-sm text-muted-foreground">
                                 Coinbase rewards paid to miners who solved a block on the BitFinite{" "}
-                                {mode === "solo" ? "solo" : "shared"} pool.
+                                {mode === "solo" ? "solo" : mode === "pool" ? "shared" : "high-difficulty solo"} pool.
                                 Each reward is the block subsidy — <span className="font-semibold text-foreground">50 BFX</span>,
                                 halving every 210,000 blocks.
                             </p>

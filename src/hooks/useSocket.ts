@@ -9,6 +9,8 @@ export function useSocket() {
     const [stats, setStats] = useState<any>(null);
     // Pool-mode (seed-3 shared ckpool) payload — null until configured / data flowing.
     const [poolStats, setPoolStats] = useState<any>(null);
+    // High-diff solo instance (seed-1 port 3334, large/rented rigs) — null until configured.
+    const [rentalStats, setRentalStats] = useState<any>(null);
 
     useEffect(() => {
         // When using custom server, socket.io is served on the same port usually
@@ -41,6 +43,10 @@ export function useSocket() {
             setPoolStats(data);
         });
 
+        socketInstance.on("rentalStats", (data) => {
+            setRentalStats(data);
+        });
+
         setSocket(socketInstance);
 
         return () => {
@@ -48,5 +54,5 @@ export function useSocket() {
         };
     }, []);
 
-    return { socket, isConnected, stats, poolStats };
+    return { socket, isConnected, stats, poolStats, rentalStats };
 }

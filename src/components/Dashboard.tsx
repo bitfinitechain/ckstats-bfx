@@ -1,10 +1,10 @@
 "use client";
 
 import { useSocket } from "@/hooks/useSocket";
-import { useMiningMode } from "@/store/miningMode";
+import { useMiningMode, type MiningMode } from "@/store/miningMode";
 import { formatHashrate, diffToNowDHM, obfuscateAddress } from "@/lib/utils";
 import Tiles from "@/components/Tiles";
-import MiningTabs, { PoolEmpty } from "@/components/MiningTabs";
+import MiningTabs, { PoolEmpty, HighDiffEmpty } from "@/components/MiningTabs";
 import MisoLoader from "@/components/MisoLoader";
 
 import {
@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/table";
 
 export default function Dashboard() {
-    const { isConnected, stats, poolStats } = useSocket();
+    const { isConnected, stats, poolStats, rentalStats } = useSocket();
     const { mode } = useMiningMode();
 
     // Initial connection — no data at all yet.
@@ -39,17 +39,19 @@ export default function Dashboard() {
         );
     }
 
-    const active = mode === "solo" ? stats : poolStats;
+    const active = mode === "solo" ? stats : mode === "pool" ? poolStats : rentalStats;
 
     return (
         <div className="space-y-8">
-            <MiningTabs solo={stats} pool={poolStats} />
+            <MiningTabs solo={stats} pool={poolStats} highdiff={rentalStats} />
 
             {active ? (
                 <>
                     <Tiles stats={active} />
                     <WorkersCard stats={active} isConnected={isConnected} mode={mode} />
                 </>
+            ) : mode === "highdiff" ? (
+                <HighDiffEmpty />
             ) : (
                 <PoolEmpty />
             )}
@@ -57,9 +59,9 @@ export default function Dashboard() {
     );
 }
 
-function WorkersCard({ stats, isConnected, mode }: { stats: any; isConnected: boolean; mode: "solo" | "pool" }) {
+function WorkersCard({ stats, isConnected, mode }: { stats: any; isConnected: boolean; mode: MiningMode }) {
     const users = stats?.users ?? [];
-    const title = mode === "solo" ? "SOLO WORKERS" : "POOL WORKERS";
+    const title = mode === "solo" ? "SOLO WORKERS" : mode === "pool" ? "POOL WORKERS" : "HIGH-DIFF WORKERS";
 
     return (
         <Card>
@@ -101,7 +103,7 @@ function WorkersCard({ stats, isConnected, mode }: { stats: any; isConnected: bo
                             ))) : (
                             <TableRow>
                                 <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
-                                    {mode === "solo" ? "No active workers" : "No pool miners yet"}
+                                    {mode === "solo" ? "No active workers" : mode === "pool" ? "No pool miners yet" : "No high-diff miners yet"}
                                 </TableCell>
                             </TableRow>
                         )}

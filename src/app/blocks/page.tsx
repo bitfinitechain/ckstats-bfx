@@ -2,7 +2,7 @@
 
 import { useSocket } from "@/hooks/useSocket";
 import { useMiningMode } from "@/store/miningMode";
-import MiningTabs, { PoolEmpty } from "@/components/MiningTabs";
+import MiningTabs, { PoolEmpty, HighDiffEmpty } from "@/components/MiningTabs";
 import {
     Card,
     CardContent,
@@ -23,7 +23,7 @@ import { getBlockReward, formatBFX, obfuscateAddress } from "@/lib/utils";
 import React from 'react';
 
 export default function BlocksPage() {
-    const { isConnected, stats, poolStats } = useSocket();
+    const { isConnected, stats, poolStats, rentalStats } = useSocket();
     const { mode } = useMiningMode();
 
     const [currentPage, setCurrentPage] = React.useState(1);
@@ -44,7 +44,7 @@ export default function BlocksPage() {
         );
     }
 
-    const active = mode === "solo" ? stats : poolStats;
+    const active = mode === "solo" ? stats : mode === "pool" ? poolStats : rentalStats;
     const blocks = active?.blocks ?? [];
 
     const totalPages = Math.ceil((blocks?.length || 0) / ITEMS_PER_PAGE);
@@ -52,10 +52,10 @@ export default function BlocksPage() {
 
     return (
         <div className="mt-8 space-y-6">
-            <MiningTabs solo={stats} pool={poolStats} />
+            <MiningTabs solo={stats} pool={poolStats} highdiff={rentalStats} />
 
             {!active ? (
-                <PoolEmpty />
+                mode === "highdiff" ? <HighDiffEmpty /> : <PoolEmpty />
             ) : (
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6">

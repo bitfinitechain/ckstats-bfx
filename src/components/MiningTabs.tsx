@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
-import { User, Users, Pickaxe } from "lucide-react";
+import { User, Users, Pickaxe, Gauge } from "lucide-react";
 import { useMiningMode, type MiningMode } from "@/store/miningMode";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -12,13 +12,14 @@ import { Card, CardContent } from "@/components/ui/card";
  * filled primary pill that slides between positions; each tab shows its live
  * worker count.
  */
-export default function MiningTabs({ solo, pool }: { solo: any; pool: any }) {
+export default function MiningTabs({ solo, pool, highdiff }: { solo: any; pool: any; highdiff?: any }) {
     const { mode, setMode } = useMiningMode();
     const reduce = useReducedMotion();
 
     const tabs: { key: MiningMode; label: string; icon: any; data: any }[] = [
         { key: "solo", label: "Solo", icon: User, data: solo },
         { key: "pool", label: "Pool", icon: Users, data: pool },
+        { key: "highdiff", label: "High-Diff", icon: Gauge, data: highdiff },
     ];
 
     return (
@@ -26,7 +27,7 @@ export default function MiningTabs({ solo, pool }: { solo: any; pool: any }) {
             <div
                 role="tablist"
                 aria-label="Mining mode"
-                className="inline-grid grid-cols-2 gap-1.5 rounded-full border border-border bg-card p-1.5"
+                className="inline-grid grid-cols-3 gap-1.5 rounded-full border border-border bg-card p-1.5"
             >
                 {tabs.map((t) => {
                     const isActive = mode === t.key;
@@ -88,6 +89,29 @@ export function PoolEmpty() {
                             stratum+tcp://pool.bitfinitechain.org:3333
                         </code>{" "}
                         and your stats will appear here.
+                    </p>
+                </div>
+            </CardContent>
+        </Card>
+    );
+}
+
+/** Shown when the High-Diff tab is active but no large/rented rig is connected to 3334. */
+export function HighDiffEmpty() {
+    return (
+        <Card>
+            <CardContent className="flex flex-col items-center justify-center gap-4 py-20 text-center">
+                <div className="flex h-14 w-14 items-center justify-center rounded-full border border-primary/30 bg-primary/10">
+                    <Gauge size={26} className="text-primary" />
+                </div>
+                <div className="space-y-1">
+                    <h3 className="text-lg font-bold text-foreground">No high-difficulty miners right now</h3>
+                    <p className="mx-auto max-w-md text-sm text-muted-foreground">
+                        This is the high fixed-difficulty solo port for large ASICs &amp; rented rigs. Point one at{" "}
+                        <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-foreground">
+                            stratum+tcp://solo.bitfinitechain.org:3334
+                        </code>{" "}
+                        and its stats will appear here.
                     </p>
                 </div>
             </CardContent>

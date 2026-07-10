@@ -16,6 +16,9 @@ const prisma = new PrismaClient();
 // the Pool tab renders a "coming online" state instead of zeros.
 const SOLO_LOGS_DIR = process.env.CKPOOL_LOGS_DIR || path.join(process.cwd(), '..', 'ckpool-bitfinite', 'release', 'logs');
 const POOL_LOGS_DIR = process.env.POOL_CKPOOL_LOGS_DIR || '';
+// High-diff solo instance (seed-1 port 3334, large/rented rigs). Optional — surfaced
+// as its own "High-Diff" tab, kept separate from organic small-miner solo (3333).
+const RENTAL_LOGS_DIR = process.env.RENTAL_CKPOOL_LOGS_DIR || '';
 
 // ckpool keeps a per-user state file that survives across restarts AND across the
 // chain re-anchor, so miners from the previous (old-genesis) chain linger as "active
@@ -100,16 +103,26 @@ async function poll(io: Server) {
         const p = collectSource(POOL_LOGS_DIR, 'pool', network);
         if (p.global.users > 0 || p.blocks.length > 0) pool = p;
     }
+    // High-diff (3334) — same gating as pool: null until there's real activity, so
+    // the tab shows "off" when no large/rented rig is connected.
+    let rental = null;
+    if (RENTAL_LOGS_DIR) {
+        const r = collectSource(RENTAL_LOGS_DIR, 'rental', network);
+        if (r.global.users > 0 || r.blocks.length > 0) rental = r;
+    }
 
     console.log(`Emitting stats — solo: ${solo.global.users} users / ${solo.blocks.length} blocks` +
-        (pool ? `, pool: ${pool.global.users} users / ${pool.blocks.length} blocks` : ', pool: n/a'));
+        (pool ? `, pool: ${pool.global.users} users / ${pool.blocks.length} blocks` : ', pool: n/a') +
+        (rental ? `, highdiff: ${rental.global.users} users / ${rental.blocks.length} blocks` : ', highdiff: n/a'));
 
-    io.emit('stats', solo);        // solo payload (unchanged shape — other pages rely on it)
-    io.emit('poolStats', pool);    // pool payload, or null when not configured / no data yet
+    io.emit('stats', solo);          // solo payload (unchanged shape — other pages rely on it)
+    io.emit('poolStats', pool);      // pool payload, or null when not configured / no data yet
+    io.emit('rentalStats', rental);  // high-diff (3334) payload, or null when idle / not configured
 
     try {
         await redis.set('latest_stats', JSON.stringify(solo));
         await redis.set('latest_pool_stats', JSON.stringify(pool));
+        await redis.set('latest_rental_stats', JSON.stringify(rental));
     } catch (e) {
         console.error("Redis save failed:", e);
     }
@@ -378,6 +391,7 @@ async function getNetworkStats(): Promise<{ difficulty: number, networkHashrate:
 function refreshOneBalance() {
     const dirs = [path.join(SOLO_LOGS_DIR, 'users')];
     if (POOL_LOGS_DIR) dirs.push(path.join(POOL_LOGS_DIR, 'users'));
+    if (RENTAL_LOGS_DIR) dirs.push(path.join(RENTAL_LOGS_DIR, 'users'));
 
     const files: string[] = [];
     for (const d of dirs) {

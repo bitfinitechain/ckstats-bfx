@@ -4,7 +4,7 @@ import { useSocket } from "@/hooks/useSocket";
 import { useMiningMode } from "@/store/miningMode";
 import { formatHashrate, obfuscateAddress } from "@/lib/utils";
 import { WorkerSearch } from "@/components/WorkerSearch";
-import MiningTabs, { PoolEmpty } from "@/components/MiningTabs";
+import MiningTabs, { PoolEmpty, HighDiffEmpty } from "@/components/MiningTabs";
 import MisoLoader from "@/components/MisoLoader";
 import {
     Card,
@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/table";
 
 export default function WorkersPage() {
-    const { isConnected, stats, poolStats } = useSocket();
+    const { isConnected, stats, poolStats, rentalStats } = useSocket();
     const { mode } = useMiningMode();
 
     if (!stats) {
@@ -37,21 +37,21 @@ export default function WorkersPage() {
         );
     }
 
-    const active = mode === "solo" ? stats : poolStats;
+    const active = mode === "solo" ? stats : mode === "pool" ? poolStats : rentalStats;
     const users = active?.users ?? [];
 
     return (
         <div className="mt-8 space-y-6">
-            <MiningTabs solo={stats} pool={poolStats} />
+            <MiningTabs solo={stats} pool={poolStats} highdiff={rentalStats} />
 
             {!active ? (
-                <PoolEmpty />
+                mode === "highdiff" ? <HighDiffEmpty /> : <PoolEmpty />
             ) : (
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6">
                         <CardTitle className="text-xl font-bold text-foreground flex items-center gap-2">
                             <span className="w-2 h-2 rounded-full bg-primary"></span>
-                            {mode === "solo" ? "SOLO WORKERS" : "POOL WORKERS"}
+                            {mode === "solo" ? "SOLO WORKERS" : mode === "pool" ? "POOL WORKERS" : "HIGH-DIFF WORKERS"}
                         </CardTitle>
                         <div className="flex items-center gap-4">
                             <WorkerSearch />
@@ -86,7 +86,7 @@ export default function WorkersPage() {
                                 ) : (
                                     <TableRow>
                                         <TableCell colSpan={4} className="h-24 text-center">
-                                            {mode === "solo" ? "No active workers found." : "No pool miners yet."}
+                                            {mode === "solo" ? "No active workers found." : mode === "pool" ? "No pool miners yet." : "No high-diff miners yet."}
                                         </TableCell>
                                     </TableRow>
                                 )}
