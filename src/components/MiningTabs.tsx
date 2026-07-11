@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
-import { User, Users, Pickaxe, Gauge } from "lucide-react";
+import { Pickaxe, Network, Zap } from "lucide-react";
 import { useMiningMode, type MiningMode } from "@/store/miningMode";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -17,9 +17,9 @@ export default function MiningTabs({ solo, pool, highdiff }: { solo: any; pool: 
     const reduce = useReducedMotion();
 
     const tabs: { key: MiningMode; label: string; icon: any; data: any }[] = [
-        { key: "solo", label: "Solo", icon: User, data: solo },
-        { key: "pool", label: "Pool", icon: Users, data: pool },
-        { key: "highdiff", label: "High-Diff", icon: Gauge, data: highdiff },
+        { key: "solo", label: "Solo", icon: Pickaxe, data: solo },
+        { key: "pool", label: "Pool", icon: Network, data: pool },
+        { key: "highdiff", label: "High-Diff", icon: Zap, data: highdiff },
     ];
 
     return (
@@ -102,7 +102,7 @@ export function HighDiffEmpty() {
         <Card>
             <CardContent className="flex flex-col items-center justify-center gap-4 py-20 text-center">
                 <div className="flex h-14 w-14 items-center justify-center rounded-full border border-primary/30 bg-primary/10">
-                    <Gauge size={26} className="text-primary" />
+                    <Zap size={26} className="text-primary" />
                 </div>
                 <div className="space-y-1">
                     <h3 className="text-lg font-bold text-foreground">No high-difficulty miners right now</h3>
