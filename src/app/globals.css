@@ -12,16 +12,24 @@
   --primary: #0644f1;
   --primary-foreground: #ffffff;
 
+  --secondary: #f4f4f5;
+  --secondary-foreground: #09090b;
+
   --muted: #f4f4f5;
   --muted-foreground: #71717a;
 
   --accent: #f4f4f5;
   --accent-foreground: #09090b;
 
-  --destructive: #ef4444;
-  --destructive-foreground: #fafafa;
+  /* Semantic state colors — legible as text/dot on their own surface in both modes */
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
 
-  --border: #f4f4f5;
+  --success: #059669;
+  --success-foreground: #ffffff;
+
+  /* Distinct hairline — must differ from --card or borders vanish */
+  --border: #d4d4d8;
   --input: #d4d4d8;
   --ring: #0644f1;
 }
@@ -38,16 +46,22 @@
   --primary: #0644f1;
   --primary-foreground: #ffffff;
 
+  --secondary: #27272a;
+  --secondary-foreground: #fafafa;
+
   --muted: #27272a;
   --muted-foreground: #a1a1aa;
 
   --accent: #27272a;
   --accent-foreground: #fafafa;
 
-  --destructive: #7f1d1d;
-  --destructive-foreground: #fafafa;
+  --destructive: #f87171;
+  --destructive-foreground: #450a0a;
 
-  --border: #18181b;
+  --success: #34d399;
+  --success-foreground: #052e21;
+
+  --border: #27272a;
   --input: #27272a;
   --ring: #0644f1;
 }
@@ -59,6 +73,10 @@
   --color-card-foreground: var(--card-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);

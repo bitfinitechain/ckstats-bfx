@@ -3,12 +3,9 @@
 import { useSocket } from "@/hooks/useSocket";
 import { useMiningMode } from "@/store/miningMode";
 import MiningTabs, { PoolEmpty, HighDiffEmpty } from "@/components/MiningTabs";
-import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
+import { CardTitleRow, LivePill } from "@/components/CardTitleRow";
+import PageHeading from "@/components/PageHeading";
 import {
     Table,
     TableBody,
@@ -35,7 +32,7 @@ export default function BlocksPage() {
     if (!stats) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
-                <MisoLoader size={120} className="mx-auto" />
+                <MisoLoader size={96} className="mx-auto" />
                 <p className="text-muted-foreground">Loading block history...</p>
                 <div className="text-xs text-muted-foreground">
                     Socket: {isConnected ? "Connected" : "Disconnected"}
@@ -51,64 +48,57 @@ export default function BlocksPage() {
     const paginatedBlocks = blocks?.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
     return (
-        <div className="mt-8 space-y-6">
-            <MiningTabs solo={stats} pool={poolStats} highdiff={rentalStats} />
+        <div>
+            <PageHeading action={<MiningTabs solo={stats} pool={poolStats} highdiff={rentalStats} />}>
+                Blocks
+            </PageHeading>
 
             {!active ? (
                 mode === "highdiff" ? <HighDiffEmpty /> : <PoolEmpty />
             ) : (
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6">
-                        <CardTitle className="text-xl font-bold text-foreground flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-primary"></span>
-                            RECENT BLOCKS
-                        </CardTitle>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-primary' : 'bg-destructive'}`}></span>
-                            {isConnected ? 'Live' : 'Offline'}
-                        </div>
-                    </CardHeader>
-                    <CardContent>
+                <>
+                    <Card>
+                        <CardTitleRow title="Recent Blocks" right={<LivePill isConnected={isConnected} />} />
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead className="text-xs font-bold font-sans uppercase text-muted-foreground">Height</TableHead>
-                                    <TableHead className="text-xs font-bold font-sans uppercase text-muted-foreground">Solved By</TableHead>
-                                    <TableHead className="text-right text-xs font-bold font-sans uppercase text-muted-foreground">Reward</TableHead>
-                                    <TableHead className="hidden sm:table-cell text-right text-xs font-bold font-sans uppercase text-muted-foreground">Time Found</TableHead>
+                                    <TableHead>Height</TableHead>
+                                    <TableHead>Solved By</TableHead>
+                                    <TableHead className="text-right">Reward</TableHead>
+                                    <TableHead className="hidden sm:table-cell text-right">Time Found</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {paginatedBlocks && paginatedBlocks.length > 0 ? (
                                     paginatedBlocks.map((block: any, i: number) => (
                                         <TableRow key={i}>
-                                            <TableCell className="font-bold font-mono text-sm whitespace-nowrap">#{block.height}</TableCell>
-                                            <TableCell className="font-bold font-mono text-xs sm:text-sm" title={block.solver}>
+                                            <TableCell className="font-mono font-bold text-primary whitespace-nowrap">#{block.height}</TableCell>
+                                            <TableCell className="font-mono" title={block.solver}>
                                                 <a href={`https://explorer.bitfinitechain.org/address/${block.solver}`} target="_blank" rel="noopener noreferrer" className="hover:underline text-primary">
                                                     {obfuscateAddress(block.solver)}
                                                 </a>
                                             </TableCell>
-                                            <TableCell className="text-right font-bold font-mono text-xs sm:text-sm text-primary whitespace-nowrap">{formatBFX(getBlockReward(block.height))}</TableCell>
-                                            <TableCell className="hidden sm:table-cell text-right font-bold font-mono text-sm whitespace-nowrap">{new Date(block.time).toLocaleString()}</TableCell>
+                                            <TableCell className="text-right font-mono tabular-nums text-foreground whitespace-nowrap">{formatBFX(getBlockReward(block.height))}</TableCell>
+                                            <TableCell className="hidden sm:table-cell text-right font-mono tabular-nums text-muted-foreground whitespace-nowrap">{new Date(block.time).toLocaleString()}</TableCell>
                                         </TableRow>
                                     ))
                                 ) : (
                                     <TableRow>
-                                        <TableCell colSpan={4} className="h-24 text-center">
+                                        <TableCell colSpan={4} className="px-5 py-12 text-center text-muted-foreground">
                                             No blocks found recently.
                                         </TableCell>
                                     </TableRow>
                                 )}
                             </TableBody>
                         </Table>
+                    </Card>
 
-                        <Pagination
-                            currentPage={currentPage}
-                            totalPages={totalPages}
-                            onPageChange={setCurrentPage}
-                        />
-                    </CardContent>
-                </Card>
+                    <Pagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={setCurrentPage}
+                    />
+                </>
             )}
         </div>
     );

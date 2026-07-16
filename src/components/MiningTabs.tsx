@@ -41,7 +41,7 @@ export default function MiningTabs({ solo, pool, highdiff }: { solo: any; pool: 
                             aria-selected={isActive}
                             onClick={() => setMode(t.key)}
                             className={`relative isolate flex items-center justify-center gap-2 rounded-full px-5 py-2 text-sm font-bold outline-none transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-primary/50 active:scale-[0.98] ${
-                                isActive ? "text-white" : "text-muted-foreground hover:text-foreground"
+                                isActive ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground"
                             }`}
                         >
                             {isActive && (
@@ -60,7 +60,7 @@ export default function MiningTabs({ solo, pool, highdiff }: { solo: any; pool: 
                             <span>{t.label}</span>
                             <span
                                 className={`font-mono text-[11px] font-semibold ${
-                                    isActive ? "text-white/80" : "text-muted-foreground/70"
+                                    isActive ? "text-primary-foreground/80" : "text-muted-foreground/70"
                                 }`}
                             >
                                 {online ? `${workers}w` : "off"}

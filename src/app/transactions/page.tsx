@@ -3,12 +3,10 @@
 import { useSocket } from "@/hooks/useSocket";
 import { useMiningMode } from "@/store/miningMode";
 import MiningTabs, { PoolEmpty, HighDiffEmpty } from "@/components/MiningTabs";
-import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
+import { LivePill } from "@/components/CardTitleRow";
+import PageHeading from "@/components/PageHeading";
+import StatTile from "@/components/StatTile";
 import {
     Table,
     TableBody,
@@ -35,7 +33,7 @@ export default function PayoutsPage() {
     if (!stats) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
-                <MisoLoader size={120} className="mx-auto" />
+                <MisoLoader size={96} className="mx-auto" />
                 <p className="text-muted-foreground">Loading payout history...</p>
                 <div className="text-xs text-muted-foreground">
                     Socket: {isConnected ? "Connected" : "Disconnected"}
@@ -57,100 +55,85 @@ export default function PayoutsPage() {
     const paginatedBlocks = blocks?.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
     return (
-        <div className="mt-8 space-y-6">
-            <MiningTabs solo={stats} pool={poolStats} highdiff={rentalStats} />
+        <div>
+            <PageHeading action={<MiningTabs solo={stats} pool={poolStats} highdiff={rentalStats} />}>
+                Payouts
+            </PageHeading>
 
             {!active ? (
                 mode === "highdiff" ? <HighDiffEmpty /> : <PoolEmpty />
             ) : (
                 <>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <SummaryCard icon={<Boxes size={16} className="text-primary" />} label="Blocks Found (24h)" value={dayBlocks.length.toLocaleString()} />
-                        <SummaryCard icon={<Coins size={16} className="text-primary" />} label="Rewarded (24h)" value={formatBFX(rewarded24h)} />
-                        <SummaryCard icon={<Layers size={16} className="text-primary" />} label="Latest Block" value={latestHeight != null ? `#${latestHeight}` : '—'} />
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mb-5">
+                        <StatTile icon={<Boxes size={16} />} label="Blocks Found (24h)" value={dayBlocks.length.toLocaleString()} />
+                        <StatTile icon={<Coins size={16} />} label="Rewarded (24h)" value={formatBFX(rewarded24h)} />
+                        <StatTile icon={<Layers size={16} />} label="Latest Block" value={latestHeight != null ? `#${latestHeight}` : '—'} />
                     </div>
 
                     <Card>
-                        <CardHeader className="space-y-2 pb-6">
-                            <div className="flex flex-row items-center justify-between space-y-0">
-                                <CardTitle className="text-xl font-bold text-foreground flex items-center gap-2">
-                                    <span className="w-2 h-2 rounded-full bg-primary"></span>
-                                    RECENT PAYOUTS
-                                </CardTitle>
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                    <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-primary' : 'bg-destructive'}`}></span>
-                                    {isConnected ? 'Live' : 'Offline'}
-                                </div>
+                        <div className="px-5 py-4 border-b border-border">
+                            <div className="flex flex-row items-center justify-between gap-3">
+                                <h2 className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-2.5">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+                                    Recent Payouts
+                                </h2>
+                                <LivePill isConnected={isConnected} />
                             </div>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-sm text-muted-foreground mt-2">
                                 Coinbase rewards paid to miners who solved a block on the BitFinite{" "}
                                 {mode === "solo" ? "solo" : mode === "pool" ? "shared" : "high-difficulty solo"} pool.
                                 Each reward is the block subsidy — <span className="font-semibold text-foreground">50 BFX</span>,
                                 halving every 210,000 blocks.
                             </p>
-                        </CardHeader>
-                        <CardContent>
-                            <Table>
-                                <TableHeader>
+                        </div>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Time</TableHead>
+                                    <TableHead>Receiver</TableHead>
+                                    <TableHead className="text-right">Reward</TableHead>
+                                    <TableHead className="hidden md:table-cell text-right">Transaction</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {paginatedBlocks && paginatedBlocks.length > 0 ? (
+                                    paginatedBlocks.map((block: any, i: number) => {
+                                        const href = `https://explorer.bitfinitechain.org/${block.txid ? 'tx/' + block.txid : 'block/' + block.height}`;
+                                        return (
+                                            <TableRow key={i}>
+                                                <TableCell className="font-mono tabular-nums text-muted-foreground whitespace-nowrap">{new Date(block.time).toLocaleString()}</TableCell>
+                                                <TableCell className="font-mono" title={block.solver}>
+                                                    <a href={href} target="_blank" rel="noopener noreferrer" className="hover:underline text-primary">
+                                                        {obfuscateAddress(block.solver)}
+                                                    </a>
+                                                </TableCell>
+                                                <TableCell className="text-right font-mono tabular-nums text-foreground whitespace-nowrap">{formatBFX(getBlockReward(block.height))}</TableCell>
+                                                <TableCell className="hidden md:table-cell text-right">
+                                                    <a href={href} target="_blank" rel="noopener noreferrer" className="hover:underline text-primary text-sm">
+                                                        {block.txid ? `View transaction` : `Height ${block.height} (coinbase)`}
+                                                    </a>
+                                                </TableCell>
+                                            </TableRow>
+                                        );
+                                    })
+                                ) : (
                                     <TableRow>
-                                        <TableHead className="text-xs font-bold font-sans uppercase text-muted-foreground">Time</TableHead>
-                                        <TableHead className="text-xs font-bold font-sans uppercase text-muted-foreground">Receiver</TableHead>
-                                        <TableHead className="text-right text-xs font-bold font-sans uppercase text-muted-foreground">Reward</TableHead>
-                                        <TableHead className="hidden md:table-cell text-right text-xs font-bold font-sans uppercase text-muted-foreground">TXID (Block Height)</TableHead>
+                                        <TableCell colSpan={4} className="px-5 py-12 text-center text-muted-foreground">
+                                            No payouts found recently.
+                                        </TableCell>
                                     </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {paginatedBlocks && paginatedBlocks.length > 0 ? (
-                                        paginatedBlocks.map((block: any, i: number) => {
-                                            const href = `https://explorer.bitfinitechain.org/${block.txid ? 'tx/' + block.txid : 'block/' + block.height}`;
-                                            return (
-                                                <TableRow key={i}>
-                                                    <TableCell className="font-bold font-mono text-xs sm:text-sm whitespace-nowrap">{new Date(block.time).toLocaleString()}</TableCell>
-                                                    <TableCell className="font-bold font-mono text-xs sm:text-sm" title={block.solver}>
-                                                        <a href={href} target="_blank" rel="noopener noreferrer" className="hover:underline text-primary">
-                                                            {obfuscateAddress(block.solver)}
-                                                        </a>
-                                                    </TableCell>
-                                                    <TableCell className="text-right font-bold font-mono text-xs sm:text-sm text-primary whitespace-nowrap">{formatBFX(getBlockReward(block.height))}</TableCell>
-                                                    <TableCell className="hidden md:table-cell text-right font-bold font-mono text-sm text-muted-foreground">
-                                                        <a href={href} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                                                            {block.txid ? `View Transaction` : `Height ${block.height} (Coinbase)`}
-                                                        </a>
-                                                    </TableCell>
-                                                </TableRow>
-                                            );
-                                        })
-                                    ) : (
-                                        <TableRow>
-                                            <TableCell colSpan={4} className="h-24 text-center">
-                                                No payouts found recently.
-                                            </TableCell>
-                                        </TableRow>
-                                    )}
-                                </TableBody>
-                            </Table>
-
-                            <Pagination
-                                currentPage={currentPage}
-                                totalPages={totalPages}
-                                onPageChange={setCurrentPage}
-                            />
-                        </CardContent>
+                                )}
+                            </TableBody>
+                        </Table>
                     </Card>
+
+                    <Pagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={setCurrentPage}
+                    />
                 </>
             )}
         </div>
-    );
-}
-
-function SummaryCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
-    return (
-        <Card className="p-5">
-            <div className="flex justify-between items-start mb-2">
-                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{label}</span>
-                {icon}
-            </div>
-            <div className="text-2xl font-bold text-foreground font-mono">{value}</div>
-        </Card>
     );
 }

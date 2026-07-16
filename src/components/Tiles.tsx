@@ -1,14 +1,15 @@
-
 import { hashrateSuffix, abbreviateNumber, secondsToDHM, diffToNowDHM, getBlockReward, formatBFX, expectedBlockSeconds } from "@/lib/utils";
-import {
-    Card,
-} from "@/components/ui/card";
+import StatTile, { Metric } from "@/components/StatTile";
 import MiniChart from "@/components/MiniChart";
 import { Activity, CheckCircle, Users, Gauge } from "lucide-react";
 
 interface TilesProps {
     stats: any;
 }
+
+const qualifier = (t: string) => (
+    <span className="text-sm font-normal font-sans text-muted-foreground ml-2">{t}</span>
+);
 
 export default function Tiles({ stats }: TilesProps) {
     if (!stats) return null;
@@ -26,143 +27,97 @@ export default function Tiles({ stats }: TilesProps) {
         ? history.shares.map((v: number, i: number, a: number[]) => (i > 0 ? Math.max(0, v - a[i - 1]) : 0))
         : [];
 
-    return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {/* Hashrate Tile */}
-            <Card className="p-6">
-                <div className="flex justify-between items-start mb-2">
-                    <span className="text-xs font-bold text-muted-foreground uppercase">HASHRATE</span>
-                    <Activity size={16} className="text-primary" />
-                </div>
-                <div className="text-2xl font-bold text-foreground mb-4">
-                    {hashrateSuffix(global.hashrate5m)}
-                    <span className="text-sm font-normal text-muted-foreground ml-2">5m Avg</span>
-                </div>
+    const luck = global.luck;
+    const luckClass = !luck ? 'text-muted-foreground' : luck >= 100 ? 'text-success' : 'text-foreground';
 
-                {history && history.hashrate && history.hashrate.length > 0 && (
-                    <div className="mb-4">
-                        <div className="h-10">
-                            <MiniChart data={history.hashrate} color="var(--primary)" height={40} />
-                        </div>
+    return (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3.5 mb-8">
+            {/* Hashrate */}
+            <StatTile
+                label="Hashrate"
+                icon={<Activity size={16} />}
+                value={<>{hashrateSuffix(global.hashrate5m)}{qualifier('5m Avg')}</>}
+            >
+                {history?.hashrate?.length > 0 && (
+                    <div className="mt-4">
+                        <div className="h-10"><MiniChart data={history.hashrate} color="var(--primary)" height={40} /></div>
                         <p className="text-[10px] text-muted-foreground text-right mt-1">Hashrate Variance</p>
                     </div>
                 )}
-
-                <div className="grid grid-cols-2 gap-y-2 pt-2 border-t mt-auto">
-                    <Metric label="1 Hour" headline={hashrateSuffix(global.hashrate1hr)} />
-                    <Metric label="1 Day" headline={hashrateSuffix(global.hashrate1d || 0)} />
-                    <div className="col-span-2 mt-2 pt-2 border-t flex justify-between items-center">
+                <div className="grid grid-cols-2 gap-y-3 pt-3 border-t border-border/70 mt-4">
+                    <Metric label="1 Hour" value={hashrateSuffix(global.hashrate1hr)} />
+                    <Metric label="1 Day" value={hashrateSuffix(global.hashrate1d || 0)} />
+                    <div className="col-span-2 mt-1 pt-3 border-t border-border/70 flex justify-between items-center">
                         <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Pool Luck (24h)</span>
-                        <span className={`text-lg font-bold font-mono ${!global.luck ? 'text-muted-foreground' : global.luck >= 100 ? 'text-green-500' : 'text-orange-500'}`}>
-                            {global.luck ? `${global.luck.toFixed(2)}%` : '---'}
+                        <span className={`text-lg font-bold font-mono tabular-nums ${luckClass}`}>
+                            {luck ? `${luck.toFixed(2)}%` : '---'}
                         </span>
                     </div>
                 </div>
-            </Card>
+            </StatTile>
 
-            {/* Shares Tile */}
-            <Card className="p-6">
-                <div className="flex justify-between items-start mb-2">
-                    <span className="text-xs font-bold text-muted-foreground uppercase">ACCEPTED SHARES</span>
-                    <CheckCircle size={16} className="text-primary" />
-                </div>
-                <div className="text-2xl font-bold text-foreground mb-4">
-                    {abbreviateNumber(global.accepted || 0)}
-                </div>
-
-                {/* Shares Bar Chart */}
-                {history && history.shares && history.shares.length > 1 && (
-                    <div className="mb-4">
-                        <div className="h-10">
-                            <MiniChart data={history.shares} type="bar" color="var(--primary)" height={40} />
-                        </div>
+            {/* Accepted Shares */}
+            <StatTile
+                label="Accepted Shares"
+                icon={<CheckCircle size={16} />}
+                value={abbreviateNumber(global.accepted || 0)}
+            >
+                {history?.shares?.length > 1 && (
+                    <div className="mt-4">
+                        <div className="h-10"><MiniChart data={history.shares} type="bar" color="var(--primary)" height={40} /></div>
                         <p className="text-[10px] text-muted-foreground text-right mt-1">Shares Trend</p>
                     </div>
                 )}
-
-                <div className="grid grid-cols-2 gap-y-4 pt-2 border-t mt-auto">
-                    <Metric label="Best Share" headline={abbreviateNumber(global.bestshare || 0)} />
-                    <Metric label="Rejected" headline={abbreviateNumber(global.rejected || 0)} />
-                    <Metric label="SPS (1m)" headline={global.SPS1m || "0"} />
-                    <Metric label="Total processed" headline={abbreviateNumber((global.accepted || 0) + (global.rejected || 0))} />
+                <div className="grid grid-cols-2 gap-y-4 pt-3 border-t border-border/70 mt-4">
+                    <Metric label="Best Share" value={abbreviateNumber(global.bestshare || 0)} />
+                    <Metric label="Rejected" value={abbreviateNumber(global.rejected || 0)} />
+                    <Metric label="SPS (1m)" value={global.SPS1m || "0"} />
+                    <Metric label="Total Processed" value={abbreviateNumber((global.accepted || 0) + (global.rejected || 0))} />
                 </div>
-            </Card>
+            </StatTile>
 
-            {/* Info Tile */}
-            <Card className="p-6">
-                <div className="flex justify-between items-start mb-2">
-                    <span className="text-xs font-bold text-muted-foreground uppercase">ACTIVE WORKERS</span>
-                    <Users size={16} className="text-primary" />
-                </div>
-                <div className="text-2xl font-bold text-foreground mb-4">
-                    {global.workers}
-                    <span className="text-sm font-normal text-muted-foreground ml-2">Workers</span>
-                </div>
-
-                {/* Share-rate chart — how many accepted shares the workers land per interval */}
+            {/* Active Workers */}
+            <StatTile
+                label="Active Workers"
+                icon={<Users size={16} />}
+                value={<>{global.workers}{qualifier('Workers')}</>}
+            >
                 {shareRate.length > 1 && (
-                    <div className="mb-4">
-                        <div className="h-10">
-                            <MiniChart data={shareRate} type="line" color="var(--primary)" height={40} />
-                        </div>
+                    <div className="mt-4">
+                        <div className="h-10"><MiniChart data={shareRate} type="line" color="var(--primary)" height={40} /></div>
                         <p className="text-[10px] text-muted-foreground text-right mt-1">Share Activity</p>
                     </div>
                 )}
-
-                <div className="grid grid-cols-2 gap-y-4 pt-2 border-t mt-auto">
-                    <div className="flex flex-col">
-                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Users</span>
-                        <span className="text-lg font-bold font-mono">{global.users}</span>
-                    </div>
-                    <div className="flex flex-col">
-                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Uptime</span>
-                        <span className="text-lg font-bold font-mono">{secondsToDHM(global.runtime || 0)}</span>
-                    </div>
-                    <div className="flex flex-col col-span-2">
-                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Last Update</span>
-                        <span className="text-lg font-bold font-mono">{diffToNowDHM(global.lastupdate || Date.now() / 1000)}</span>
+                <div className="grid grid-cols-2 gap-y-4 pt-3 border-t border-border/70 mt-4">
+                    <Metric label="Users" value={global.users} />
+                    <Metric label="Uptime" value={secondsToDHM(global.runtime || 0)} />
+                    <div className="col-span-2">
+                        <Metric label="Last Update" value={diffToNowDHM(global.lastupdate || Date.now() / 1000)} />
                     </div>
                 </div>
-            </Card>
+            </StatTile>
 
-            {/* Network Tile */}
-            <Card className="p-6">
-                <div className="flex justify-between items-start mb-2">
-                    <span className="text-xs font-bold text-muted-foreground uppercase">NETWORK</span>
-                    <Gauge size={16} className="text-primary" />
-                </div>
-                <div className="text-2xl font-bold text-foreground mb-4">
-                    {hashrateSuffix(global.networkHashrate || 0)}
-                    <span className="text-sm font-normal text-muted-foreground ml-2">Net Hashrate</span>
-                </div>
-
-                {history && history.networkHashrate && history.networkHashrate.length > 1 && (
-                    <div className="mb-4">
-                        <div className="h-10">
-                            <MiniChart data={history.networkHashrate} type="line" color="var(--primary)" height={40} />
-                        </div>
+            {/* Network */}
+            <StatTile
+                label="Network"
+                icon={<Gauge size={16} />}
+                value={<>{hashrateSuffix(global.networkHashrate || 0)}{qualifier('Net Hashrate')}</>}
+            >
+                {history?.networkHashrate?.length > 1 && (
+                    <div className="mt-4">
+                        <div className="h-10"><MiniChart data={history.networkHashrate} type="line" color="var(--primary)" height={40} /></div>
                         <p className="text-[10px] text-muted-foreground text-right mt-1">Network Hashrate</p>
                     </div>
                 )}
-
-                <div className="grid grid-cols-2 gap-y-4 pt-2 border-t mt-auto">
-                    <Metric label="Difficulty" headline={abbreviateNumber(global.difficulty || 0)} />
-                    <Metric label="Block Reward" headline={formatBFX(getBlockReward(latestHeight))} />
-                    <div className="col-span-2 mt-2 pt-2 border-t flex justify-between items-center">
+                <div className="grid grid-cols-2 gap-y-4 pt-3 border-t border-border/70 mt-4">
+                    <Metric label="Difficulty" value={abbreviateNumber(global.difficulty || 0)} />
+                    <Metric label="Block Reward" value={formatBFX(getBlockReward(latestHeight))} />
+                    <div className="col-span-2 mt-1 pt-3 border-t border-border/70 flex justify-between items-center">
                         <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Est. Time to Block</span>
-                        <span className="text-lg font-bold font-mono">{estBlock}</span>
+                        <span className="text-lg font-bold font-mono tabular-nums">{estBlock}</span>
                     </div>
                 </div>
-            </Card>
-        </div>
-    );
-}
-
-function Metric({ label, headline }: { label: string; headline: string }) {
-    return (
-        <div className="flex flex-col">
-            <span className="text-sm text-muted-foreground uppercase tracking-wider mb-1 text-[10px]">{label}</span>
-            <span className="text-lg font-bold font-mono">{headline}</span>
+            </StatTile>
         </div>
     );
 }

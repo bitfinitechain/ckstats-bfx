@@ -41,7 +41,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <Header />
-          <main className="flex-grow container mx-auto px-4 py-8">
+          <main className="flex-grow w-full max-w-[1600px] mx-auto px-6 md:px-10 py-6 md:py-8">
             {children}
           </main>
           <Footer />
