@@ -51,7 +51,11 @@ export default function Footer() {
                     <div>
                         <h3 className="font-semibold mb-4">Community</h3>
                         <div className="flex space-x-4">
-                            <a href="https://github.com/bitfinitechain" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
+                            <a href="https://x.com/bitfinitechain" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors" aria-label="X">
+                                <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
+                                <span className="sr-only">X</span>
+                            </a>
+                            <a href="https://github.com/bitfinitechain" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors" aria-label="GitHub">
                                 <Github className="w-5 h-5" />
                                 <span className="sr-only">GitHub</span>
                             </a>
