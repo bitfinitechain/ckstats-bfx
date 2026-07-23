@@ -19,6 +19,7 @@ import { Pagination } from "@/components/Pagination";
 import MisoLoader from "@/components/MisoLoader";
 import { getBlockReward, formatBFX, obfuscateAddress } from "@/lib/utils";
 import { Coins, Boxes, Layers } from "lucide-react";
+import Link from "next/link";
 import React from 'react';
 
 export default function PayoutsPage() {
@@ -106,8 +107,9 @@ export default function PayoutsPage() {
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Time</TableHead>
-                                    <TableHead>{isPool ? "Found by" : "Receiver"}</TableHead>
-                                    <TableHead className="text-right">{isPool ? "Block subsidy" : "Reward"}</TableHead>
+                                    <TableHead>{isPool ? "Receiver (pool)" : "Receiver"}</TableHead>
+                                    <TableHead className="text-right">{isPool ? "Amount" : "Reward"}</TableHead>
+                                    {isPool && <TableHead className="hidden sm:table-cell">Found by</TableHead>}
                                     <TableHead className="hidden md:table-cell text-right">Transaction</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -115,15 +117,30 @@ export default function PayoutsPage() {
                                 {paginatedBlocks && paginatedBlocks.length > 0 ? (
                                     paginatedBlocks.map((block: any, i: number) => {
                                         const href = `https://explorer.bitfinitechain.org/${block.txid ? 'tx/' + block.txid : 'block/' + block.height}`;
+                                        // Pool: coinbase pays the pool address (resolved from the node) and is
+                                        // split by shares; the finder only submitted the winning share. Solo /
+                                        // high-diff: coinbase pays the finder directly, so receiver === solver.
+                                        const receiver = isPool ? block.receiver : block.solver;
                                         return (
                                             <TableRow key={i}>
                                                 <TableCell className="font-mono tabular-nums text-muted-foreground whitespace-nowrap">{new Date(block.time).toLocaleString()}</TableCell>
-                                                <TableCell className="font-mono" title={block.solver}>
-                                                    <a href={href} target="_blank" rel="noopener noreferrer" className="hover:underline text-primary">
-                                                        {obfuscateAddress(block.solver)}
-                                                    </a>
+                                                <TableCell className="font-mono" title={receiver || undefined}>
+                                                    {receiver ? (
+                                                        <a href={`https://explorer.bitfinitechain.org/address/${receiver}`} target="_blank" rel="noopener noreferrer" className="hover:underline text-primary">
+                                                            {obfuscateAddress(receiver)}
+                                                        </a>
+                                                    ) : (
+                                                        <span className="text-muted-foreground">pool</span>
+                                                    )}
                                                 </TableCell>
                                                 <TableCell className="text-right font-mono tabular-nums text-foreground whitespace-nowrap">{formatBFX(getBlockReward(block.height))}</TableCell>
+                                                {isPool && (
+                                                    <TableCell className="hidden sm:table-cell font-mono" title={block.solver}>
+                                                        <Link href={`/workers/${block.solver}`} className="hover:underline text-muted-foreground">
+                                                            {obfuscateAddress(block.solver)}
+                                                        </Link>
+                                                    </TableCell>
+                                                )}
                                                 <TableCell className="hidden md:table-cell text-right">
                                                     <a href={href} target="_blank" rel="noopener noreferrer" className="hover:underline text-primary text-sm">
                                                         {block.txid ? `View transaction` : `Height ${block.height} (coinbase)`}
@@ -134,7 +151,7 @@ export default function PayoutsPage() {
                                     })
                                 ) : (
                                     <TableRow>
-                                        <TableCell colSpan={4} className="px-5 py-12 text-center text-muted-foreground">
+                                        <TableCell colSpan={isPool ? 5 : 4} className="px-5 py-12 text-center text-muted-foreground">
                                             No payouts found recently.
                                         </TableCell>
                                     </TableRow>

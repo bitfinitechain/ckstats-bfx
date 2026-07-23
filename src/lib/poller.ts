@@ -37,8 +37,13 @@ const balanceCache = new Map<string, { balance: any, timestamp: number }>();
 let nextUserIndex = 0;
 const pendingBalanceFetches = new Set<string>();
 const txidCache = new Map<number, string>();
+// Coinbase receiver (the address the block subsidy was actually paid to) by height.
+// For solo / high-diff this is the finder; for the shared PPLNS pool it's the POOL
+// address (finder only submitted the winning share) — resolved from the node below.
+const receiverCache = new Map<number, string>();
 // Global busy flag for Electrum to enforce strict serial execution
 let electrumBusy = false;
+let nodeRpcBusy = false;
 
 const POLLING_INTERVAL_MS = 2000; // 2 seconds
 
@@ -344,13 +349,17 @@ function readBlocks(ckpoolLog: string): any[] {
                     worker: fullSolver,
                     time: new Date(match![1]).getTime(),
                     txid: undefined as string | undefined,
+                    receiver: undefined as string | undefined,
                 };
             })
             .reverse()
             .slice(0, 2000);
 
-        fetchMissingTxids(blocks);
-        for (const block of blocks) block.txid = txidCache.get(block.height);
+        fetchMissingCoinbase(blocks);
+        for (const block of blocks) {
+            block.txid = txidCache.get(block.height);
+            block.receiver = receiverCache.get(block.height);
+        }
         return blocks;
     } catch (e) {
         console.error("Error reading ckpool log:", e);
@@ -478,5 +487,59 @@ async function fetchMissingTxids(blocks: any[]) {
         }
     } finally {
         electrumBusy = false;
+    }
+}
+
+// Minimal JSON-RPC call to the local bitfinited node (txindex=1). Authoritative for
+// coinbase data across every source; requires BITFINITE_RPC_URL/USER/PASS in .env.
+async function nodeRpc(method: string, params: any[] = []): Promise<any> {
+    const url = process.env.BITFINITE_RPC_URL;
+    if (!url) throw new Error('BITFINITE_RPC_URL unset');
+    const auth = 'Basic ' + Buffer.from(
+        `${process.env.BITFINITE_RPC_USER || ''}:${process.env.BITFINITE_RPC_PASS || ''}`
+    ).toString('base64');
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: auth },
+        body: JSON.stringify({ jsonrpc: '1.0', id: 'stats', method, params }),
+    });
+    const json: any = await res.json();
+    if (json.error) throw new Error(json.error.message || 'rpc error');
+    return json.result;
+}
+
+// Resolve each block's coinbase txid AND receiver address straight from the node.
+// Unlike the electrum-history path (which only sees the finder's own address, so it
+// misses shared-pool blocks whose coinbase pays the POOL), this is correct for solo,
+// high-diff and PPLNS alike. Capped per tick; the caches fill over successive polls.
+async function fetchMissingCoinbase(blocks: any[]) {
+    if (nodeRpcBusy || !process.env.BITFINITE_RPC_URL) return;
+    const missing = blocks.filter(b =>
+        (!txidCache.has(b.height) || !receiverCache.has(b.height)) &&
+        !failedTxidLookups.has(b.height)
+    ).slice(0, 8);
+    if (missing.length === 0) return;
+
+    nodeRpcBusy = true;
+    try {
+        for (const b of missing) {
+            try {
+                const hash = await nodeRpc('getblockhash', [b.height]);
+                const blk = await nodeRpc('getblock', [hash, 2]);
+                const cb = blk?.tx?.[0];
+                if (cb?.txid) txidCache.set(b.height, cb.txid);
+                // Largest coinbase output = the pool/finder payout; ignore the tiny
+                // fee/donation split (e.g. the 0.5 BFX 1% pool fee).
+                const outs = (cb?.vout || [])
+                    .map((o: any) => ({ v: o.value as number, addr: o.scriptPubKey?.addresses?.[0] as string | undefined }))
+                    .filter((o: any) => o.addr)
+                    .sort((a: any, c: any) => c.v - a.v);
+                if (outs[0]?.addr) receiverCache.set(b.height, outs[0].addr);
+            } catch {
+                failedTxidLookups.add(b.height);
+            }
+        }
+    } finally {
+        nodeRpcBusy = false;
     }
 }
