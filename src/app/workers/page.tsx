@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useSocket } from "@/hooks/useSocket";
 import { useMiningMode } from "@/store/miningMode";
 import { formatHashrate, obfuscateAddress } from "@/lib/utils";
@@ -69,8 +70,10 @@ export default function WorkersPage() {
                             {users && users.length > 0 ? (
                                 users.map((u: any) => (
                                     <TableRow key={u.address}>
-                                        <TableCell className="font-mono truncate max-w-[160px] sm:max-w-[300px]" title="Address hidden for privacy">
-                                            {obfuscateAddress(u.address)}
+                                        <TableCell className="font-mono truncate max-w-[160px] sm:max-w-[300px]" title="View this miner's workers">
+                                            <Link href={`/workers/${u.address}`} className="text-primary hover:underline">
+                                                {obfuscateAddress(u.address)}
+                                            </Link>
                                         </TableCell>
                                         <TableCell className="text-right font-mono tabular-nums">{u.workers}</TableCell>
                                         <TableCell className="text-right font-mono tabular-nums whitespace-nowrap">{formatHashrate(u.hashrate5m)} <span className="text-xs font-normal text-muted-foreground">H/s</span></TableCell>

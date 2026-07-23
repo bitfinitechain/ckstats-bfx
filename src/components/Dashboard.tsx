@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useSocket } from "@/hooks/useSocket";
 import { useMiningMode, type MiningMode } from "@/store/miningMode";
 import { formatHashrate, diffToNowDHM, obfuscateAddress } from "@/lib/utils";
@@ -77,8 +78,10 @@ function WorkersCard({ stats, isConnected, mode }: { stats: any; isConnected: bo
                     {users && users.length > 0 ? (
                         users.map((u: any) => (
                             <TableRow key={u.address}>
-                                <TableCell className="font-mono truncate max-w-[160px] sm:max-w-[200px] md:max-w-none" title="Address hidden for privacy">
-                                    {obfuscateAddress(u.address)}
+                                <TableCell className="font-mono truncate max-w-[160px] sm:max-w-[200px] md:max-w-none" title="View this miner's workers">
+                                    <Link href={`/workers/${u.address}`} className="text-primary hover:underline">
+                                        {obfuscateAddress(u.address)}
+                                    </Link>
                                 </TableCell>
                                 <TableCell className="text-right font-mono tabular-nums">{u.workers}</TableCell>
                                 <TableCell className="text-right font-mono tabular-nums whitespace-nowrap">
