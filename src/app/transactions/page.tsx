@@ -45,6 +45,11 @@ export default function PayoutsPage() {
     const active = mode === "solo" ? stats : mode === "pool" ? poolStats : rentalStats;
     const blocks = active?.blocks ?? [];
 
+    // The shared pool is PPLNS: each block's coinbase goes to the pool address and
+    // is then split among all contributors by shares — the finder does NOT pocket
+    // the full 50 BFX. Solo / high-diff are coinbase-to-finder (finder gets it all).
+    const isPool = mode === "pool";
+
     // Each row is a block this source solved; the payout is that block's coinbase reward.
     const now = Date.now();
     const dayBlocks = (blocks || []).filter((b: any) => b.time && now - b.time < 86_400_000);
@@ -66,7 +71,7 @@ export default function PayoutsPage() {
                 <>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mb-5">
                         <StatTile icon={<Boxes size={16} />} label="Blocks Found (24h)" value={dayBlocks.length.toLocaleString()} />
-                        <StatTile icon={<Coins size={16} />} label="Rewarded (24h)" value={formatBFX(rewarded24h)} />
+                        <StatTile icon={<Coins size={16} />} label={isPool ? "Pooled (24h)" : "Rewarded (24h)"} value={formatBFX(rewarded24h)} />
                         <StatTile icon={<Layers size={16} />} label="Latest Block" value={latestHeight != null ? `#${latestHeight}` : '—'} />
                     </div>
 
@@ -75,23 +80,34 @@ export default function PayoutsPage() {
                             <div className="flex flex-row items-center justify-between gap-3">
                                 <h2 className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-2.5">
                                     <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
-                                    Recent Payouts
+                                    {isPool ? "Recent Blocks" : "Recent Payouts"}
                                 </h2>
                                 <LivePill isConnected={isConnected} />
                             </div>
                             <p className="text-sm text-muted-foreground mt-2">
-                                Coinbase rewards paid to miners who solved a block on the BitFinite{" "}
-                                {mode === "solo" ? "solo" : mode === "pool" ? "shared" : "high-difficulty solo"} pool.
-                                Each reward is the block subsidy — <span className="font-semibold text-foreground">50 BFX</span>,
-                                halving every 210,000 blocks.
+                                {isPool ? (
+                                    <>
+                                        Blocks solved on the BitFinite <span className="font-semibold text-foreground">shared</span> pool.
+                                        Each block&rsquo;s <span className="font-semibold text-foreground">50 BFX</span> subsidy is paid to the
+                                        pool and then distributed to <span className="font-semibold text-foreground">all contributors in
+                                        proportion to their shares</span> — the finder shown below does not receive the full reward.
+                                    </>
+                                ) : (
+                                    <>
+                                        Coinbase rewards paid directly to miners who solved a block on the BitFinite{" "}
+                                        {mode === "solo" ? "solo" : "high-difficulty solo"} pool.
+                                        Each reward is the block subsidy — <span className="font-semibold text-foreground">50 BFX</span>,
+                                        halving every 210,000 blocks.
+                                    </>
+                                )}
                             </p>
                         </div>
                         <Table>
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Time</TableHead>
-                                    <TableHead>Receiver</TableHead>
-                                    <TableHead className="text-right">Reward</TableHead>
+                                    <TableHead>{isPool ? "Found by" : "Receiver"}</TableHead>
+                                    <TableHead className="text-right">{isPool ? "Block subsidy" : "Reward"}</TableHead>
                                     <TableHead className="hidden md:table-cell text-right">Transaction</TableHead>
                                 </TableRow>
                             </TableHeader>
