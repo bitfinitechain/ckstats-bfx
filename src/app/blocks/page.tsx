@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useSocket } from "@/hooks/useSocket";
 import { useMiningMode } from "@/store/miningMode";
 import MiningTabs, { PoolEmpty, HighDiffEmpty } from "@/components/MiningTabs";
@@ -72,11 +73,13 @@ export default function BlocksPage() {
                                 {paginatedBlocks && paginatedBlocks.length > 0 ? (
                                     paginatedBlocks.map((block: any, i: number) => (
                                         <TableRow key={i}>
-                                            <TableCell className="font-mono font-bold text-primary whitespace-nowrap">#{block.height}</TableCell>
-                                            <TableCell className="font-mono" title={block.solver}>
-                                                <a href={`https://explorer.bitfinitechain.org/address/${block.solver}`} target="_blank" rel="noopener noreferrer" className="hover:underline text-primary">
+                                            <TableCell className="font-mono font-bold whitespace-nowrap">
+                                                <a href={`https://explorer.bitfinitechain.org/block/${block.height}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline" title="View block on the explorer">#{block.height}</a>
+                                            </TableCell>
+                                            <TableCell className="font-mono" title="View this miner's workers">
+                                                <Link href={`/workers/${block.solver}`} className="hover:underline text-primary">
                                                     {obfuscateAddress(block.solver)}
-                                                </a>
+                                                </Link>
                                             </TableCell>
                                             <TableCell className="text-right font-mono tabular-nums text-foreground whitespace-nowrap">{formatBFX(getBlockReward(block.height))}</TableCell>
                                             <TableCell className="hidden sm:table-cell text-right font-mono tabular-nums text-muted-foreground whitespace-nowrap">{new Date(block.time).toLocaleString()}</TableCell>
