@@ -45,24 +45,35 @@ export default function IndividualWorkerPage({ params }: { params: Promise<{ add
     const decodedAddress = decodeURIComponent(address);
     const decodedWorkerName = decodeURIComponent(workerNameEncoded);
 
-    const { stats, isConnected } = useSocket();
+    const { stats, poolStats, rentalStats, isConnected } = useSocket();
     const [user, setUser] = useState<any>(null);
     const [workerData, setWorkerData] = useState<any>(null);
+    const [srcBlocks, setSrcBlocks] = useState<any[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
     const ITEMS_PER_PAGE = 20;
 
     useEffect(() => {
-        if (stats && stats.users) {
-            const match = stats.users.find((u: any) => u.address === decodedAddress)
-                || stats.users.find((u: any) => u.address.replace('bfx:', '') === decodedAddress);
-            setUser(match);
-            if (match && match.workerDetails) {
-                setWorkerData(match.workerDetails.find((w: any) => w.workername === decodedWorkerName));
+        // Search all three ckpool sources (solo / shared pool / high-diff) so a
+        // pool miner's worker resolves too — and keep that source's blocks.
+        const findIn = (s: any) =>
+            s && s.users
+                ? s.users.find((u: any) => u.address === decodedAddress)
+                  || s.users.find((u: any) => u.address.replace('bfx:', '') === decodedAddress)
+                : undefined;
+        for (const s of [stats, poolStats, rentalStats]) {
+            const match = findIn(s);
+            if (match) {
+                setUser(match);
+                if (match.workerDetails) {
+                    setWorkerData(match.workerDetails.find((w: any) => w.workername === decodedWorkerName));
+                }
+                setSrcBlocks(s.blocks || []);
+                break;
             }
         }
-    }, [stats, decodedAddress, decodedWorkerName]);
+    }, [stats, poolStats, rentalStats, decodedAddress, decodedWorkerName]);
 
-    const minerBlocks = stats?.blocks?.filter((b: any) => b.worker === decodedWorkerName) || [];
+    const minerBlocks = srcBlocks.filter((b: any) => b.worker === decodedWorkerName) || [];
     const totalPages = Math.ceil(minerBlocks.length / ITEMS_PER_PAGE);
     const paginatedBlocks = minerBlocks.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 

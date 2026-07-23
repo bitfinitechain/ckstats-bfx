@@ -28,16 +28,20 @@ export default function WorkerPage({ params }: { params: Promise<{ address: stri
     const { address } = use(params);
     const decodedAddress = decodeURIComponent(address);
 
-    const { stats, isConnected } = useSocket();
+    const { stats, poolStats, rentalStats, isConnected } = useSocket();
     const [worker, setWorker] = useState<any>(null);
 
     useEffect(() => {
-        if (stats && stats.users) {
-            const match = stats.users.find((u: any) => u.address === decodedAddress)
-                || stats.users.find((u: any) => u.address.replace('bfx:', '') === decodedAddress);
-            setWorker(match);
-        }
-    }, [stats, decodedAddress]);
+        // A miner can be on any of the three ckpool sources (solo / shared pool /
+        // high-diff), so search all — otherwise pool miners are wrongly "not found".
+        const findIn = (s: any) =>
+            s && s.users
+                ? s.users.find((u: any) => u.address === decodedAddress)
+                  || s.users.find((u: any) => u.address.replace('bfx:', '') === decodedAddress)
+                : undefined;
+        const match = findIn(stats) || findIn(poolStats) || findIn(rentalStats);
+        if (match) setWorker(match);
+    }, [stats, poolStats, rentalStats, decodedAddress]);
 
     if (!isConnected && !worker) {
         return (
