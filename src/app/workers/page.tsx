@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSocket } from "@/hooks/useSocket";
 import { useMiningMode } from "@/store/miningMode";
@@ -7,6 +8,7 @@ import { formatHashrate, obfuscateAddress } from "@/lib/utils";
 import { WorkerSearch } from "@/components/WorkerSearch";
 import MiningTabs, { PoolEmpty, HighDiffEmpty } from "@/components/MiningTabs";
 import MisoLoader from "@/components/MisoLoader";
+import { Pagination } from "@/components/Pagination";
 import { Card } from "@/components/ui/card";
 import { CardTitleRow, LivePill } from "@/components/CardTitleRow";
 import PageHeading from "@/components/PageHeading";
@@ -19,9 +21,16 @@ import {
     TableRow,
 } from "@/components/ui/table";
 
+const PAGE_SIZES = [10, 25, 50, 100];
+
 export default function WorkersPage() {
     const { isConnected, stats, poolStats, rentalStats } = useSocket();
     const { mode } = useMiningMode();
+    const [page, setPage] = useState(1);
+    const [pageSize, setPageSize] = useState(25);
+
+    // Back to the first page when switching Solo/Pool/High-diff or page size.
+    useEffect(() => { setPage(1); }, [mode, pageSize]);
 
     if (!stats) {
         return (
@@ -37,6 +46,9 @@ export default function WorkersPage() {
 
     const active = mode === "solo" ? stats : mode === "pool" ? poolStats : rentalStats;
     const users = active?.users ?? [];
+    const totalPages = Math.max(1, Math.ceil(users.length / pageSize));
+    const safePage = Math.min(page, totalPages);
+    const paginated = users.slice((safePage - 1) * pageSize, safePage * pageSize);
 
     return (
         <div>
@@ -57,6 +69,23 @@ export default function WorkersPage() {
                             </div>
                         }
                     />
+                    <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-border flex-wrap">
+                        <p className="text-sm text-muted-foreground">
+                            {users.length.toLocaleString()} miner{users.length === 1 ? "" : "s"}
+                        </p>
+                        <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                            Show
+                            <select
+                                value={pageSize}
+                                onChange={(e) => setPageSize(Number(e.target.value))}
+                                className="bg-card border border-border rounded-lg px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer"
+                            >
+                                {PAGE_SIZES.map((n) => (
+                                    <option key={n} value={n}>{n}</option>
+                                ))}
+                            </select>
+                        </label>
+                    </div>
                     <Table>
                         <TableHeader>
                             <TableRow>
@@ -67,8 +96,8 @@ export default function WorkersPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {users && users.length > 0 ? (
-                                users.map((u: any) => (
+                            {paginated && paginated.length > 0 ? (
+                                paginated.map((u: any) => (
                                     <TableRow key={u.address}>
                                         <TableCell className="font-mono truncate max-w-[160px] sm:max-w-[300px]" title="View this miner's workers">
                                             <Link href={`/workers/${u.address}`} className="text-primary hover:underline">
@@ -89,6 +118,7 @@ export default function WorkersPage() {
                             )}
                         </TableBody>
                     </Table>
+                    <Pagination currentPage={safePage} totalPages={totalPages} onPageChange={setPage} />
                 </Card>
             )}
         </div>
