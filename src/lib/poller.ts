@@ -286,6 +286,17 @@ function collectSource(logsDir: string, key: string, network: { difficulty: numb
     if (hist.hashrate.length > 50) hist.hashrate.shift();
     if (hist.networkHashrate.length > 50) hist.networkHashrate.shift();
 
+    // Active miners first: order by current (5m) hashrate desc, then most recent
+    // share. Live rigs rise to the top and idle / stale 0-hashrate records sink.
+    // Done here (server-side, per source) so EVERY source — solo, shared pool,
+    // high-diff — and every consumer (dashboard, workers list) share one order.
+    usersData.sort((a, b) => {
+        const ha = Number(parseHashrate(a.hashrate5m || "0"));
+        const hb = Number(parseHashrate(b.hashrate5m || "0"));
+        if (hb !== ha) return hb - ha;
+        return (Number(b.lastshare) || 0) - (Number(a.lastshare) || 0);
+    });
+
     return {
         global: {
             users: globalStats.users,
@@ -316,7 +327,10 @@ function collectSource(logsDir: string, key: string, network: { difficulty: numb
             lastshare: u.lastshare,
             authorised: u.authorised,
             balance: u.balance,
-            workerDetails: u.workerDetails,
+            // active workers first (5m hashrate desc) — same ordering rule as the miner list
+            workerDetails: [...(u.workerDetails || [])].sort(
+                (a: any, b: any) => Number(parseHashrate(b.hashrate5m || "0")) - Number(parseHashrate(a.hashrate5m || "0"))
+            ),
             history: u.history,
         })),
         blocks,
