@@ -192,11 +192,31 @@ export default function WorkerPage({ params }: { params: Promise<{ address: stri
                             </p>
                         </div>
                     </div>
-                    <p className="px-5 pb-4 text-xs text-muted-foreground">
-                        {worker.earnings.pendingEst > 0
-                            ? 'Estimated share of the current pool balance that distributes on the next payout run (PPLNS-style, proportional to shares, minus a 1% fee).'
-                            : 'Shares are accruing. Earnings distribute — proportional to shares, minus a 1% fee — once the next block matures and the pool has a spendable balance.'}
-                    </p>
+                    <div className="px-5 pb-5 space-y-3 border-t border-border pt-4">
+                        <p className="text-xs text-muted-foreground">
+                            {worker.earnings.pendingEst > 0
+                                ? "Your estimated share of the pool's current spendable balance — it distributes automatically on the next hourly payout run (proportional to shares, minus a 1% fee)."
+                                : 'Your shares are counted and accruing (see “Unpaid Shares”). There is nothing spendable to distribute yet — earnings appear once the pool finds a block and that block matures.'}
+                        </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            {[
+                                { n: '1', t: 'Pool finds a block', s: '50 BFX reward to the pool' },
+                                { n: '2', t: 'Reward matures', s: '100 confirmations (~8 hours) — a network rule, same as Bitcoin' },
+                                { n: '3', t: 'Auto-distributed', s: 'hourly, by your share of work, minus a 1% fee' },
+                            ].map((step) => (
+                                <div key={step.n} className="flex gap-2.5">
+                                    <span className="shrink-0 w-5 h-5 rounded-full bg-primary/15 text-primary text-[11px] font-bold flex items-center justify-center">{step.n}</span>
+                                    <div className="min-w-0">
+                                        <div className="text-[12px] font-medium text-foreground">{step.t}</div>
+                                        <div className="text-[11px] text-muted-foreground leading-snug">{step.s}</div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        <p className="text-[11px] text-muted-foreground/80">
+                            Your work is never lost — shares keep accumulating until the next block matures, then everyone is paid proportionally.
+                        </p>
+                    </div>
                 </Card>
             )}
 
