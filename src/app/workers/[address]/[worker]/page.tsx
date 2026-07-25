@@ -60,16 +60,25 @@ export default function IndividualWorkerPage({ params }: { params: Promise<{ add
                 ? s.users.find((u: any) => u.address === decodedAddress)
                   || s.users.find((u: any) => u.address.replace('bfx:', '') === decodedAddress)
                 : undefined;
-        for (const s of [stats, poolStats, rentalStats]) {
-            const match = findIn(s);
-            if (match) {
-                setUser(match);
-                if (match.workerDetails) {
-                    setWorkerData(match.workerDetails.find((w: any) => w.workername === decodedWorkerName));
-                }
-                setSrcBlocks(s.blocks || []);
-                break;
+        // Prefer the source that actually contains this worker (else the most
+        // recently active one) so a stale solo record can't mask the live pool
+        // record and hide the worker's stats.
+        const candidates = [stats, poolStats, rentalStats]
+            .map((s: any) => ({ s, u: findIn(s) }))
+            .filter((c: any) => c.u);
+        candidates.sort((a: any, b: any) => {
+            const aHas = a.u.workerDetails?.some((w: any) => w.workername === decodedWorkerName) ? 1 : 0;
+            const bHas = b.u.workerDetails?.some((w: any) => w.workername === decodedWorkerName) ? 1 : 0;
+            if (aHas !== bHas) return bHas - aHas;
+            return (Number(b.u.lastshare) || 0) - (Number(a.u.lastshare) || 0);
+        });
+        const best = candidates[0];
+        if (best) {
+            setUser(best.u);
+            if (best.u.workerDetails) {
+                setWorkerData(best.u.workerDetails.find((w: any) => w.workername === decodedWorkerName));
             }
+            setSrcBlocks(best.s.blocks || []);
         }
     }, [stats, poolStats, rentalStats, decodedAddress, decodedWorkerName]);
 

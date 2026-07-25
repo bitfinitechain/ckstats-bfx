@@ -39,7 +39,12 @@ export default function WorkerPage({ params }: { params: Promise<{ address: stri
                 ? s.users.find((u: any) => u.address === decodedAddress)
                   || s.users.find((u: any) => u.address.replace('bfx:', '') === decodedAddress)
                 : undefined;
-        const match = findIn(stats) || findIn(poolStats) || findIn(rentalStats);
+        // A miner's address can linger in more than one source (e.g. a stale
+        // solo record after they move to the pool). Pick the source where they
+        // are actually active — the most recent lastshare — so an idle,
+        // 0-hashrate record doesn't mask the live one (and its worker list).
+        const candidates = [findIn(stats), findIn(poolStats), findIn(rentalStats)].filter(Boolean);
+        const match = candidates.sort((a: any, b: any) => (Number(b.lastshare) || 0) - (Number(a.lastshare) || 0))[0];
         if (match) setWorker(match);
     }, [stats, poolStats, rentalStats, decodedAddress]);
 
