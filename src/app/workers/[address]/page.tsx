@@ -166,6 +166,40 @@ export default function WorkerPage({ params }: { params: Promise<{ address: stri
                 </StatTile>
             </div>
 
+            {/* Pool earnings — shared-pool miners only (solo/high-diff pay via coinbase) */}
+            {worker.earnings && (
+                <Card className="mb-8">
+                    <CardTitleRow title="Pool Earnings" />
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 px-5 py-5">
+                        <div>
+                            <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1.5">Total Paid</p>
+                            <p className="text-2xl font-bold font-mono tabular-nums text-foreground">
+                                {(worker.earnings.paidTotal || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
+                                <span className="text-sm font-normal text-muted-foreground ml-1">BFX</span>
+                            </p>
+                        </div>
+                        <div>
+                            <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1.5">Pending (est.)</p>
+                            <p className="text-2xl font-bold font-mono tabular-nums text-foreground">
+                                {(worker.earnings.pendingEst || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
+                                <span className="text-sm font-normal text-muted-foreground ml-1">BFX</span>
+                            </p>
+                        </div>
+                        <div>
+                            <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1.5">Unpaid Shares</p>
+                            <p className="text-2xl font-bold font-mono tabular-nums text-foreground">
+                                {abbreviateNumber(worker.earnings.unpaidShares || 0)}
+                            </p>
+                        </div>
+                    </div>
+                    <p className="px-5 pb-4 text-xs text-muted-foreground">
+                        {worker.earnings.pendingEst > 0
+                            ? 'Estimated share of the current pool balance that distributes on the next payout run (PPLNS-style, proportional to shares, minus a 1% fee).'
+                            : 'Shares are accruing. Earnings distribute — proportional to shares, minus a 1% fee — once the next block matures and the pool has a spendable balance.'}
+                    </p>
+                </Card>
+            )}
+
             {/* Worker breakdown */}
             <Card>
                 <CardTitleRow title="Workers" />

@@ -137,6 +137,24 @@ async function poll(io: Server) {
 function collectSource(logsDir: string, key: string, network: { difficulty: number, networkHashrate: number }) {
     const usersDir = path.join(logsDir, 'users');
 
+    // Per-miner earnings (shared pool only). pool-payout/emit_earnings.py writes
+    // this read-only next to the ckpool logs on seed-3; it rides the same rsync
+    // to POOL_LOGS_DIR here. Absent for solo/high-diff (they pay via coinbase).
+    let earningsMiners: Record<string, any> = {};
+    let earningsMeta: any = null;
+    try {
+        const ef = path.join(logsDir, 'earnings.json');
+        if (fs.existsSync(ef)) {
+            const ej = JSON.parse(fs.readFileSync(ef, 'utf-8'));
+            earningsMiners = ej.miners || {};
+            earningsMeta = {
+                updated: ej.updated, spendable: ej.spendable, distributable: ej.distributable,
+                pot: ej.pot, totalUnpaidShares: ej.totalUnpaidShares,
+                feeRate: ej.feeRate, minPayout: ej.minPayout, payable: ej.payable,
+            };
+        }
+    } catch (e) { /* no earnings for this source */ }
+
     const globalStats = {
         workers: 0,
         hashrate1m: BigInt(0),
@@ -312,6 +330,7 @@ function collectSource(logsDir: string, key: string, network: { difficulty: numb
             difficulty: globalStats.difficulty,
             networkHashrate: globalStats.networkHashrate,
             luck: globalStats.luck,
+            earnings: earningsMeta,
         },
         users: usersData.map(u => ({
             address: u.address,
@@ -332,6 +351,7 @@ function collectSource(logsDir: string, key: string, network: { difficulty: numb
                 (a: any, b: any) => Number(parseHashrate(b.hashrate5m || "0")) - Number(parseHashrate(a.hashrate5m || "0"))
             ),
             history: u.history,
+            earnings: earningsMiners[u.address] || null,
         })),
         blocks,
         history: hist,
