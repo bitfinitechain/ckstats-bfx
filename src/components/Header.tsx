@@ -11,11 +11,14 @@ export default function Header() {
     const [isOpen, setIsOpen] = useState(false);
     const pathname = usePathname();
 
-    const navigation = [
+    const navigation: { name: string; href: string; external?: boolean }[] = [
         { name: "Dashboard", href: "/" },
         { name: "Workers", href: "/workers" },
         { name: "Blocks", href: "/blocks" },
         { name: "Payouts", href: "/transactions" },
+        // Canonical setup guide lives on the main site — stratum URLs, worker-name
+        // format and the :3333 / :3334 difference — so it isn't duplicated here.
+        { name: "Mining Guide", href: "https://bitfinitechain.org/docs#mining", external: true },
     ];
 
     return (
@@ -42,12 +45,18 @@ export default function Header() {
                             <Link
                                 key={item.name}
                                 href={item.href}
+                                {...(item.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                                 className={`text-lg font-bold transition-colors flex items-center gap-1 ${pathname === item.href
                                     ? "text-primary"
                                     : "text-muted-foreground hover:text-primary"
                                     }`}
                             >
                                 {item.name}
+                                {item.external && (
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="opacity-70">
+                                        <path d="M7 17 17 7M9 7h8v8" />
+                                    </svg>
+                                )}
                             </Link>
                         ))}
                         <ThemeToggle />
@@ -73,13 +82,14 @@ export default function Header() {
                             <Link
                                 key={item.name}
                                 href={item.href}
+                                {...(item.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                                 className={`block text-base font-medium py-2 ${pathname === item.href
                                     ? "text-primary bg-accent/50 rounded-md px-2"
                                     : "text-muted-foreground hover:text-primary px-2"
                                     }`}
                                 onClick={() => setIsOpen(false)}
                             >
-                                {item.name}
+                                {item.name}{item.external ? " \u2197" : ""}
                             </Link>
                         ))}
                     </div>

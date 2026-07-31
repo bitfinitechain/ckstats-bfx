@@ -28,9 +28,10 @@ export default function WorkersPage() {
     const { mode } = useMiningMode();
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(25);
+    const [activeOnly, setActiveOnly] = useState(true);
 
     // Back to the first page when switching Solo/Pool/High-diff or page size.
-    useEffect(() => { setPage(1); }, [mode, pageSize]);
+    useEffect(() => { setPage(1); }, [mode, pageSize, activeOnly]);
 
     if (!stats) {
         return (
@@ -45,7 +46,12 @@ export default function WorkersPage() {
     }
 
     const active = mode === "solo" ? stats : mode === "pool" ? poolStats : rentalStats;
-    const users = active?.users ?? [];
+    const allUsers = active?.users ?? [];
+    // ckpool keeps a state file per miner forever, so most of this list is miners who
+    // have gone away (86% of the solo list had 0 workers). Default to those actually
+    // connected — but show the count and let it be toggled, never silently hidden.
+    const idleCount = allUsers.filter((u: any) => Number(u.workers || 0) === 0).length;
+    const users = activeOnly ? allUsers.filter((u: any) => Number(u.workers || 0) > 0) : allUsers;
     const totalPages = Math.max(1, Math.ceil(users.length / pageSize));
     const safePage = Math.min(page, totalPages);
     const paginated = users.slice((safePage - 1) * pageSize, safePage * pageSize);
@@ -85,6 +91,20 @@ export default function WorkersPage() {
                                 ))}
                             </select>
                         </label>
+                        <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer select-none">
+                            <input
+                                type="checkbox"
+                                checked={activeOnly}
+                                onChange={(e) => setActiveOnly(e.target.checked)}
+                                className="accent-primary"
+                            />
+                            <span>
+                                Connected only
+                                {idleCount > 0 && (
+                                    <span className="ml-1 text-xs">({idleCount} idle hidden)</span>
+                                )}
+                            </span>
+                        </label>
                     </div>
                     <Table>
                         <TableHeader>
@@ -112,7 +132,7 @@ export default function WorkersPage() {
                             ) : (
                                 <TableRow>
                                     <TableCell colSpan={4} className="px-5 py-12 text-center text-muted-foreground">
-                                        {mode === "solo" ? "No active workers found." : mode === "pool" ? "No pool miners yet." : "No high-diff miners yet."}
+                                        {activeOnly && idleCount > 0 ? "No miners currently connected — untick \u201cConnected only\u201d to see miners who have mined here before." : mode === "solo" ? "No active workers found." : mode === "pool" ? "No pool miners yet." : "No high-diff miners yet."}
                                     </TableCell>
                                 </TableRow>
                             )}
