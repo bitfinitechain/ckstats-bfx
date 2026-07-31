@@ -371,6 +371,7 @@ function readBlocks(ckpoolLog: string): any[] {
         fs.closeSync(fd);
 
         const solvedRegex = /^\[(.*?)\] Solved and confirmed block (\d+) by (.*)$/;
+        const seenHeights = new Set<number>();
         const blocks = buffer.toString('utf-8').split('\n')
             .map(line => line.match(solvedRegex))
             .filter(match => match !== null)
@@ -387,6 +388,13 @@ function readBlocks(ckpoolLog: string): any[] {
                 };
             })
             .reverse()
+            // DEDUPE BY HEIGHT: ckpool re-logs "Solved and confirmed block N" on
+            // restarts/re-confirmations, so the raw log repeats heights (block 186
+            // appeared 46x, block 116 37x — ~13k lines for 9,178 distinct heights).
+            // Without this the block list shows the same block many times and any
+            // per-miner aggregate is inflated. Reversed first, so we keep the most
+            // recent line for each height.
+            .filter((b, _i, _a) => { const h = b.height; if (seenHeights.has(h)) return false; seenHeights.add(h); return true; })
             .slice(0, 2000);
 
         fetchMissingCoinbase(blocks);

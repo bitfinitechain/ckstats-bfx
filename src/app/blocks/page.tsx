@@ -48,6 +48,26 @@ export default function BlocksPage() {
     const totalPages = Math.ceil((blocks?.length || 0) / ITEMS_PER_PAGE);
     const paginatedBlocks = blocks?.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
+    // ── Top block finders ────────────────────────────────────────────────────
+    // The block list is chronological, so it never answers "who has found the most?".
+    // Aggregate the same data instead of fetching anything new.
+    // NB: only meaningful for solo / high-diff. On the shared PPLNS pool the coinbase
+    // pays the POOL address, so every block would be credited to one address — the
+    // individual finder isn't recoverable from this data, so we don't pretend it is.
+    const finders = React.useMemo(() => {
+        if (mode === "pool") return [];
+        const by = new Map<string, { solver: string; count: number; bfx: number; last: number }>();
+        for (const b of blocks as any[]) {
+            if (!b?.solver) continue;
+            const e = by.get(b.solver) ?? { solver: b.solver, count: 0, bfx: 0, last: 0 };
+            e.count += 1;
+            e.bfx += getBlockReward(b.height);
+            e.last = Math.max(e.last, Number(b.time) || 0);
+            by.set(b.solver, e);
+        }
+        return [...by.values()].sort((a, b) => b.count - a.count || b.last - a.last).slice(0, 10);
+    }, [blocks, mode]);
+
     return (
         <div>
             <PageHeading action={<MiningTabs solo={stats} pool={poolStats} highdiff={rentalStats} />}>
@@ -95,6 +115,51 @@ export default function BlocksPage() {
                             </TableBody>
                         </Table>
                     </Card>
+
+                    {finders.length > 0 && (
+                        <Card className="mb-6">
+                            <CardTitleRow
+                                title="Top block finders"
+                                right={<span className="text-xs text-muted-foreground">{blocks.length} block{blocks.length === 1 ? "" : "s"} tracked</span>}
+                            />
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead className="w-10">#</TableHead>
+                                        <TableHead>Miner</TableHead>
+                                        <TableHead className="text-right">Blocks</TableHead>
+                                        <TableHead className="text-right">Rewards</TableHead>
+                                        <TableHead className="hidden sm:table-cell text-right">Last block</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {finders.map((f, i) => (
+                                        <TableRow key={f.solver}>
+                                            <TableCell className="font-mono tabular-nums text-muted-foreground">{i + 1}</TableCell>
+                                            <TableCell className="font-mono" title="View this miner's workers">
+                                                <Link href={`/workers/${f.solver}`} className="hover:underline text-primary">
+                                                    {obfuscateAddress(f.solver)}
+                                                </Link>
+                                            </TableCell>
+                                            <TableCell className="text-right font-mono tabular-nums font-bold text-foreground">{f.count}</TableCell>
+                                            <TableCell className="text-right font-mono tabular-nums text-foreground whitespace-nowrap">{formatBFX(f.bfx)}</TableCell>
+                                            <TableCell className="hidden sm:table-cell text-right font-mono tabular-nums text-muted-foreground whitespace-nowrap">{f.last ? new Date(f.last).toLocaleString() : "—"}</TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                            <p className="px-5 pb-4 pt-1 text-xs text-muted-foreground">
+                                Aggregated from the blocks tracked below — solo finders keep the full reward.
+                            </p>
+                        </Card>
+                    )}
+                    {mode === "pool" && blocks.length > 0 && (
+                        <p className="mb-6 text-xs text-muted-foreground">
+                            No finder leaderboard on the shared pool: its coinbase pays the pool
+                            address, then rewards are split by shares — so the individual finder
+                            isn&apos;t recoverable from block data.
+                        </p>
+                    )}
 
                     <Pagination
                         currentPage={currentPage}
