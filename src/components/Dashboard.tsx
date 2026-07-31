@@ -59,12 +59,30 @@ export default function Dashboard() {
 }
 
 function WorkersCard({ stats, isConnected, mode }: { stats: any; isConnected: boolean; mode: MiningMode }) {
-    const users = stats?.users ?? [];
+    // Same rule as /workers: ckpool keeps a state file per miner forever, so most of
+    // this list is miners who have gone away — showing them made every row read "0
+    // workers". This card is a summary, so it always shows connected miners only; the
+    // full history + toggle lives on /workers.
+    const allUsers = stats?.users ?? [];
+    const users = allUsers.filter((u: any) => Number(u.workers || 0) > 0);
+    const idleCount = allUsers.length - users.length;
     const title = mode === "solo" ? "Solo Workers" : mode === "pool" ? "Pool Workers" : "High-Diff Workers";
 
     return (
         <Card>
-            <CardTitleRow title={title} right={<LivePill isConnected={isConnected} />} />
+            <CardTitleRow
+                title={title}
+                right={
+                    <span className="flex items-center gap-3">
+                        {idleCount > 0 && (
+                            <Link href="/workers" className="text-xs text-muted-foreground hover:text-primary">
+                                {idleCount} idle hidden
+                            </Link>
+                        )}
+                        <LivePill isConnected={isConnected} />
+                    </span>
+                }
+            />
             <Table>
                 <TableHeader>
                     <TableRow>
@@ -94,7 +112,7 @@ function WorkersCard({ stats, isConnected, mode }: { stats: any; isConnected: bo
                         ))) : (
                         <TableRow>
                             <TableCell colSpan={4} className="px-5 py-12 text-center text-muted-foreground">
-                                {mode === "solo" ? "No active workers" : mode === "pool" ? "No pool miners yet" : "No high-diff miners yet"}
+                                {idleCount > 0 ? "No miners connected right now" : mode === "solo" ? "No active workers" : mode === "pool" ? "No pool miners yet" : "No high-diff miners yet"}
                             </TableCell>
                         </TableRow>
                     )}
