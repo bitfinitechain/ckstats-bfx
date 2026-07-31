@@ -54,10 +54,13 @@ export default function BlocksPage() {
     // NB: only meaningful for solo / high-diff. On the shared PPLNS pool the coinbase
     // pays the POOL address, so every block would be credited to one address — the
     // individual finder isn't recoverable from this data, so we don't pretend it is.
-    const finders = React.useMemo(() => {
-        if (mode === "pool") return [];
+    // NOTE: computed inline, NOT in a hook — this runs after the `if (!stats) return`
+    // above, so a useMemo here would change the hook count between renders and crash
+    // the page (Rules of Hooks). One pass over <=2000 blocks is cheap.
+    const finders = (() => {
+        if (mode === "pool") return [] as { solver: string; count: number; bfx: number; last: number }[];
         const by = new Map<string, { solver: string; count: number; bfx: number; last: number }>();
-        for (const b of blocks as any[]) {
+        for (const b of (blocks as any[]) ?? []) {
             if (!b?.solver) continue;
             const e = by.get(b.solver) ?? { solver: b.solver, count: 0, bfx: 0, last: 0 };
             e.count += 1;
@@ -66,7 +69,7 @@ export default function BlocksPage() {
             by.set(b.solver, e);
         }
         return [...by.values()].sort((a, b) => b.count - a.count || b.last - a.last).slice(0, 10);
-    }, [blocks, mode]);
+    })();
 
     return (
         <div>
