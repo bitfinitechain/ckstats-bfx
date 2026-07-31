@@ -81,44 +81,6 @@ export default function BlocksPage() {
                 mode === "highdiff" ? <HighDiffEmpty /> : <PoolEmpty />
             ) : (
                 <>
-                    <Card>
-                        <CardTitleRow title="Recent Blocks" right={<LivePill isConnected={isConnected} />} />
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Height</TableHead>
-                                    <TableHead>Solved By</TableHead>
-                                    <TableHead className="text-right">Reward</TableHead>
-                                    <TableHead className="hidden sm:table-cell text-right">Time Found</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {paginatedBlocks && paginatedBlocks.length > 0 ? (
-                                    paginatedBlocks.map((block: any, i: number) => (
-                                        <TableRow key={i}>
-                                            <TableCell className="font-mono font-bold whitespace-nowrap">
-                                                <a href={`https://explorer.bitfinitechain.org/block/${block.height}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline" title="View block on the explorer">#{block.height}</a>
-                                            </TableCell>
-                                            <TableCell className="font-mono" title="View this miner's workers">
-                                                <Link href={`/workers/${block.solver}`} className="hover:underline text-primary">
-                                                    {obfuscateAddress(block.solver)}
-                                                </Link>
-                                            </TableCell>
-                                            <TableCell className="text-right font-mono tabular-nums text-foreground whitespace-nowrap">{formatBFX(getBlockReward(block.height))}</TableCell>
-                                            <TableCell className="hidden sm:table-cell text-right font-mono tabular-nums text-muted-foreground whitespace-nowrap">{new Date(block.time).toLocaleString()}</TableCell>
-                                        </TableRow>
-                                    ))
-                                ) : (
-                                    <TableRow>
-                                        <TableCell colSpan={4} className="px-5 py-12 text-center text-muted-foreground">
-                                            No blocks found recently.
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
-                    </Card>
-
                     {finders.length > 0 && (
                         <Card className="mb-6">
                             <CardTitleRow
@@ -163,6 +125,44 @@ export default function BlocksPage() {
                             isn&apos;t recoverable from block data.
                         </p>
                     )}
+
+                    <Card className="mt-2">
+                        <CardTitleRow title="Recent Blocks" right={<LivePill isConnected={isConnected} />} />
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Height</TableHead>
+                                    <TableHead>Solved By</TableHead>
+                                    <TableHead className="text-right">Reward</TableHead>
+                                    <TableHead className="hidden sm:table-cell text-right">Time Found</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {paginatedBlocks && paginatedBlocks.length > 0 ? (
+                                    paginatedBlocks.map((block: any, i: number) => (
+                                        <TableRow key={i}>
+                                            <TableCell className="font-mono font-bold whitespace-nowrap">
+                                                <a href={`https://explorer.bitfinitechain.org/block/${block.height}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline" title="View block on the explorer">#{block.height}</a>
+                                            </TableCell>
+                                            <TableCell className="font-mono" title="View this miner's workers">
+                                                <Link href={`/workers/${block.solver}`} className="hover:underline text-primary">
+                                                    {obfuscateAddress(block.solver)}
+                                                </Link>
+                                            </TableCell>
+                                            <TableCell className="text-right font-mono tabular-nums text-foreground whitespace-nowrap">{formatBFX(getBlockReward(block.height))}</TableCell>
+                                            <TableCell className="hidden sm:table-cell text-right font-mono tabular-nums text-muted-foreground whitespace-nowrap">{new Date(block.time).toLocaleString()}</TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell colSpan={4} className="px-5 py-12 text-center text-muted-foreground">
+                                            No blocks found recently.
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </Card>
 
                     <Pagination
                         currentPage={currentPage}
