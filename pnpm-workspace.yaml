@@ -13,3 +13,18 @@ allowBuilds:
   prisma: true
   sharp: true
   unrs-resolver: true
+
+# Patched versions forced onto transitive dependencies with no fixed parent
+# release. In-major bumps only — a cross-major override breaks the parent's
+# expected API (picomatch 2->4 did exactly that in the explorer).
+overrides:
+  picomatch: '>=2.3.2 <3'
+  socket.io-parser: '>=4.2.6'
+  ws: '>=8.21.0'
+  engine.io: '>=6.6.7'
+  sharp: '>=0.35.0'
+  postcss: '>=8.5.12'
+  js-yaml: '>=4.1.1'
+  flatted: '>=3.3.4'
+  brace-expansion: '>=2.0.2'
+  minimatch: '>=3.1.3'

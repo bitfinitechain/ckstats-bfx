@@ -6,12 +6,19 @@ const Table = React.forwardRef<
     HTMLTableElement,
     React.HTMLAttributes<HTMLTableElement>
 >(({ className, ...props }, ref) => (
-    <div className="relative w-full overflow-auto">
+    <div className="relative w-full">
+        {/* A table wider than the screen scrolls, but silently — say so, or the
+            columns past the fold read as missing. Hidden above sm, where it fits. */}
+        <div className="mb-1.5 text-[10px] tracking-[0.08em] text-muted-foreground font-mono sm:hidden" aria-hidden="true">
+            SWIPE FOR MORE COLUMNS &rarr;
+        </div>
+        <div className="w-full overflow-auto overscroll-x-contain">
         <table
             ref={ref}
             className={cn("w-full caption-bottom text-sm", className)}
             {...props}
         />
+        </div>
     </div>
 ))
 Table.displayName = "Table"

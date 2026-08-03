@@ -19,9 +19,10 @@ export function WorkerSearch() {
 
     return (
         <form onSubmit={handleSearch} className="relative w-full max-w-lg">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Search aria-hidden="true" className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
                 type="text"
+                aria-label="Search by worker address"
                 placeholder="Search by worker address..."
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
