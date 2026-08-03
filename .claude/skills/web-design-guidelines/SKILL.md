@@ -70,6 +70,10 @@ Reading source predicts; rendering proves.
 - **Your static scan has blind spots.** A grep for `overflow-x-auto` reported
   zero scrollers in a codebase using `overflow-auto`, on a site where every table
   scrolls. Grep narrows; rendering decides.
+- **Check the class actually compiled.** A utility from a plugin you never
+  installed is inert: it sits in the markup, matches no rule, and looks correct
+  in review. Four such classes shipped from a component registry and every
+  overlay animation was silently absent. Grep the built stylesheet, not the JSX.
 - **Confirm findings before acting.** A line-scoped grep for buttons missing
   `aria-label` produced six candidates, four false — JSX carries the label in an
   expression the grep had stripped.
@@ -124,6 +128,10 @@ that mean something other than they appear to.
 - If you adopt one, style **its** state hooks: Radix marks the keyboard-highlighted
   row `[data-highlighted]`, not `:focus-visible`. Styling only the latter leaves
   navigation working but invisible, which is worse than not having it.
+- **A tooltip cannot be the only carrier of an explanation, and swapping a
+  `title` for a tooltip component does not fix that** — neither opens on touch.
+  Pick by pointer type: tooltip on hover/keyboard, popover on tap. A native
+  `title` is worse still: not focusable and not dependably announced.
 - Semantic HTML before ARIA; hierarchical headings; respect
   `prefers-reduced-motion`.
 
@@ -210,6 +218,17 @@ The most common defect class.
 - **A hidden UI whose API still answers is not access control.** Gate the route.
 - **Fallbacks must not assert.** When data is missing render "—", not a value
   borrowed from elsewhere that restates the claim you were correcting.
+- **After upgrading a tool, run the tool.** A linter bumped a major version as
+  collateral in a security sweep took a plugin with it that had no compatible
+  release; `lint` then exited 2 in four repos for days, because the upgrade was
+  verified by building rather than by linting. Upgrading X is not tested by Y.
+- **Review what a scaffolding CLI added, not just what it wrote.** A component
+  generator pulled an umbrella package of 55 dependencies to satisfy three
+  imports, caret-ranged, into an otherwise exact-pinned tree. The generated files
+  were fine; the dependency edit was the thing worth reading.
+- **Adapt a vendored component in the open.** Copy-in libraries are re-added by
+  the same command that created them, so a local change is one `add` from being
+  reverted in silence. Record each deviation in the file it lives in.
 
 ---
 
