@@ -86,11 +86,24 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  /* Bind the typeface. layout.tsx puts ${geistSans.variable} on <body>, but that
+     only DEFINES --font-geist-sans — nothing was ever reading it, so all three
+     sites downloaded Geist on every page load and rendered in the OS stack
+     (-apple-system on macOS, ui-sans-serif elsewhere). Platform typography
+     varied by operating system rather than by design. Analytics was the only
+     app binding its face; these now do the same. */
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 }
 
+/* Tailwind's preflight puts the family on html via --default-font-family, which
+   resolves to --font-sans above. Stated explicitly here too so a preflight
+   change cannot silently drop us back to the system stack — the failure mode is
+   invisible, since a fallback font still looks fine. */
 body {
   background-color: var(--background);
   color: var(--foreground);
+  font-family: var(--font-sans);
 }
 
 /* ===== Motion & interaction polish (Emil Kowalski principles) ===== */
