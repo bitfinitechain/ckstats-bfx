@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Github, Globe, Mail } from "lucide-react";
+import { Github, Globe, Mail, MessagesSquare } from "lucide-react";
 
 export default function Footer() {
     return (
@@ -58,6 +58,13 @@ export default function Footer() {
                             <a href="https://github.com/bitfinitechain" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors" aria-label="GitHub">
                                 <Github className="w-5 h-5" />
                                 <span className="sr-only">GitHub</span>
+                            </a>
+                            {/* The announcement thread is where support actually happens —
+                                Discord and Telegram exist but are deliberately unstaffed, so
+                                this is the channel to point people at. */}
+                            <a href="https://bitcointalk.org/index.php?topic=5589136" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors" aria-label="Bitcointalk announcement thread">
+                                <MessagesSquare className="w-5 h-5" />
+                                <span className="sr-only">Bitcointalk</span>
                             </a>
                         </div>
                     </div>
