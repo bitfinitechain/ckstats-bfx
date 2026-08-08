@@ -119,7 +119,11 @@ export default function WorkersPage() {
                             {paginated && paginated.length > 0 ? (
                                 paginated.map((u: any) => (
                                     <TableRow key={u.address}>
-                                        <TableCell className="font-mono truncate max-w-[160px] sm:max-w-[300px]" title="View this miner's workers">
+                                        {/* No truncate. obfuscateAddress has already shortened this to
+                                            bfx:fpd3gf...93tg5x; capping it at 160px cut the tail off
+                                            the shortened form, and the tail is what tells two miners
+                                            apart. The table scrolls, so the column can have its width. */}
+                                        <TableCell className="font-mono whitespace-nowrap" title="View this miner's workers">
                                             <Link href={`/workers/${u.address}`} className="text-primary hover:underline">
                                                 {obfuscateAddress(u.address)}
                                             </Link>
