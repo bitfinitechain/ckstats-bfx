@@ -26,7 +26,7 @@ export function WorkerSearch() {
                 placeholder="Search by worker address..."
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
-                className="pl-9 h-10 w-[250px] md:w-[400px] transition-all focus:w-[300px] md:focus:w-[450px]"
+                className="pl-9 h-10 w-full min-w-0 sm:w-[250px] md:w-[400px] transition-all sm:focus:w-[300px] md:focus:w-[450px]"
             />
         </form>
     );
