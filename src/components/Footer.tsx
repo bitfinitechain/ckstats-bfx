@@ -70,7 +70,10 @@ export default function Footer() {
                     </div>
                 </div>
                 <div className="mt-8 pt-8 border-t border-border text-center text-sm text-muted-foreground">
-                    &copy; {new Date().getFullYear()} BitFinite Foundation. All rights reserved.
+                    {/* Said "BitFinite Foundation. All rights reserved." There is no
+                        foundation — the web and explorer footers say so in as many words.
+                        Same line on all three now. */}
+                    {`© ${new Date().getFullYear()} the BitFinite project · open-source, no company or foundation behind it.`}
                 </div>
             </div>
         </footer>
