@@ -44,6 +44,9 @@ const receiverCache = new Map<number, string>();
 // Global busy flag for Electrum to enforce strict serial execution
 let electrumBusy = false;
 let nodeRpcBusy = false;
+// Last emitted counts, so the poll log can report CHANGES instead of repeating
+// itself every POLLING_INTERVAL_MS. See the emit site below.
+let lastEmitSummary = '';
 
 const POLLING_INTERVAL_MS = 2000; // 2 seconds
 
@@ -116,9 +119,19 @@ async function poll(io: Server) {
         if (r.global.users > 0 || r.blocks.length > 0) rental = r;
     }
 
-    console.log(`Emitting stats — solo: ${solo.global.users} users / ${solo.blocks.length} blocks` +
-        (pool ? `, pool: ${pool.global.users} users / ${pool.blocks.length} blocks` : ', pool: n/a') +
-        (rental ? `, highdiff: ${rental.global.users} users / ${rental.blocks.length} blocks` : ', highdiff: n/a'));
+    // Log the emit only when the numbers actually CHANGE. This fired on every
+    // tick, and since the counts are stable for hours it wrote the identical line
+    // ~10.4 million times — a 510 MB pm2 log, 3,992 of the last 4,000 lines being
+    // the same sentence. A heartbeat that never varies carries no information;
+    // what an operator wants to see is the moment a miner joins or a block lands.
+    // Set STATS_LOG_EVERY_TICK=1 to restore the old firehose when debugging.
+    const emitSummary = `solo: ${solo.global.users} users / ${solo.blocks.length} blocks`
+        + (pool ? `, pool: ${pool.global.users} users / ${pool.blocks.length} blocks` : ', pool: n/a')
+        + (rental ? `, highdiff: ${rental.global.users} users / ${rental.blocks.length} blocks` : ', highdiff: n/a');
+    if (process.env.STATS_LOG_EVERY_TICK === '1' || emitSummary !== lastEmitSummary) {
+        console.log(`Emitting stats — ${emitSummary}`);
+        lastEmitSummary = emitSummary;
+    }
 
     io.emit('stats', solo);          // solo payload (unchanged shape — other pages rely on it)
     io.emit('poolStats', pool);      // pool payload, or null when not configured / no data yet
