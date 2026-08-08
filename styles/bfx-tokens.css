@@ -1,0 +1,89 @@
+/* GENERATED — do not edit here.
+   Canonical: Brandkit/tokens/tokens.css
+   Update that file, then run: bash tokens/sync.sh
+*/
+/* ============================================================================
+   BitFinite platform tokens — CANONICAL SOURCE
+   Brandkit/tokens/tokens.css · distribute with `bash tokens/sync.sh`
+   ============================================================================
+
+   These are PRIMITIVES: raw palette values with no opinion about what they are
+   for. Each app maps them onto its own semantic names, because the apps do not
+   share a theming architecture and forcing them to would be the larger mistake:
+
+     web / explorer / ckpool   :root + .dark class, shadcn-ish semantic names
+                                (--primary, --card, --border)
+     analytics                 html[data-theme] + html[data-mode], ops names
+                                (--acc, --panel, --line), plus a shadcn alias
+                                bridge and a per-tenant accent
+
+   Sharing primitives gets one palette across the platform. Sharing semantics
+   would mean rewriting one of those systems into the other.
+
+   Why this file exists: the accent drifted. Analytics independently picked
+   #3b6cff where the other three used #0644f1 — the same hue at a different
+   lightness stop — and the dark neutrals drifted with it into blue-tinted
+   near-equivalents (#0e0e12 vs #09090b, and so on). None of it was visible in
+   isolation; together it made one app read as a different product.
+
+   Every contrast figure below is measured, not estimated. Surfaces used:
+   dark panel #18181b, light page #ffffff, light card #f4f4f5.
+
+   ---------------------------------------------------------------------------
+   ACCENT IS TWO STOPS, NOT ONE — read before using --bfx-blue-*.
+
+   The brand blue does two jobs with opposite requirements:
+
+     FILL  a button surface with a label on top   #0644f1 vs white  6.76:1  ok
+     INK   accent as text on a dark panel         #0644f1 on #18181b 3.46:1 FAIL
+
+   One hex for both is what caused the drift: the accent got lightened until the
+   ink passed, which quietly put every filled button below AA. Use blue-600 as a
+   fill, blue-500 as ink on dark. Analytics derives its ink with color-mix
+   instead, because its accent is per-tenant.
+
+   STATUS COLOURS ARE ALSO TWO STOPS — one per theme, not one per platform.
+   A colour legible as text on a dark panel is not legible on a light one. The
+   light stops here are deliberately dark: they are used as ink (text-success
+   and friends appear 16 times across the three public apps) and the shallower
+   values they replaced measured 3.43 / 2.90 / 4.39 — warning was below even the
+   AA-large 3:1 floor. They double as fills under a white label; all three clear
+   5.4:1 that way.
+   ============================================================================ */
+
+:root {
+  /* ---- brand blue ---------------------------------------------------------
+     One ramp, hue 264-266° in OKLCh; only lightness moves between stops. */
+  --bfx-blue-500: #517cf5;   /* ink on dark   — 4.68:1 on #18181b */
+  --bfx-blue-600: #0644f1;   /* brand + fill  — 6.76:1 under white */
+  --bfx-blue-700: #2258e6;   /* light-theme fill — 5.82:1 under white */
+
+  /* ---- neutrals (zinc) ----------------------------------------------------
+     Dark theme reads 950 → 900 → 800 → 400 → 50 as
+     page ground → card → hairline → muted text → text.
+     zinc-400 as muted text on the dark card is 6.91:1. */
+  --bfx-zinc-50:  #fafafa;
+  --bfx-zinc-100: #f4f4f5;
+  --bfx-zinc-300: #d4d4d8;
+  --bfx-zinc-400: #a1a1aa;
+  --bfx-zinc-500: #71717a;
+  /* 550 is not a Tailwind step; it exists because 500 does not clear AA as
+     TEXT on the light card — 4.83:1 on #ffffff but 4.40:1 on #f4f4f5, and
+     muted-foreground is body copy, not decoration. 550 is the lightest zinc
+     that passes on both (5.28:1 / 4.80:1), so secondary text keeps its
+     weight instead of jumping to zinc-600. */
+  --bfx-zinc-550: #6b6b74;
+  --bfx-zinc-700: #3f3f46;
+  --bfx-zinc-800: #27272a;
+  --bfx-zinc-900: #18181b;
+  --bfx-zinc-950: #09090b;
+
+  /* ---- status -------------------------------------------------------------
+     dark stops measured on #18181b; light stops on #ffffff / #f4f4f5. */
+  --bfx-success-dark:  #34d399;   /*  9.22:1 */
+  --bfx-success-light: #0d7547;   /*  5.75:1 / 5.23:1 */
+  --bfx-warning-dark:  #fbbf24;   /* 10.61:1 */
+  --bfx-warning-light: #975a03;   /*  5.56:1 / 5.05:1 */
+  --bfx-danger-dark:   #f87171;   /*  6.40:1 */
+  --bfx-danger-light:  #c92a2a;   /*  5.46:1 / 4.96:1 */
+}
