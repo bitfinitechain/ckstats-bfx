@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/table";
 import { Pagination } from "@/components/Pagination";
 import MisoLoader from "@/components/MisoLoader";
+import MaturityStatus from "@/components/MaturityStatus";
 import { getBlockReward, formatBFX, obfuscateAddress } from "@/lib/utils";
 import React from 'react';
 
@@ -135,6 +136,7 @@ export default function BlocksPage() {
                                     <TableHead>Solved By</TableHead>
                                     <TableHead className="text-right">Reward</TableHead>
                                     <TableHead className="hidden sm:table-cell text-right">Time Found</TableHead>
+                                    <TableHead>Status</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -151,11 +153,17 @@ export default function BlocksPage() {
                                             </TableCell>
                                             <TableCell className="text-right font-mono tabular-nums text-foreground whitespace-nowrap">{formatBFX(getBlockReward(block.height))}</TableCell>
                                             <TableCell className="hidden sm:table-cell text-right font-mono tabular-nums text-muted-foreground whitespace-nowrap">{new Date(block.time).toLocaleString()}</TableCell>
+                                            {/* The reward column above shows a number that is not
+                                                spendable for 100 blocks. This is the column that
+                                                says when it will be. */}
+                                            <TableCell className="whitespace-nowrap">
+                                                <MaturityStatus height={Number(block.height)} chainTip={Number(active?.global?.chainTip) || 0} />
+                                            </TableCell>
                                         </TableRow>
                                     ))
                                 ) : (
                                     <TableRow>
-                                        <TableCell colSpan={4} className="px-5 py-12 text-center text-muted-foreground">
+                                        <TableCell colSpan={5} className="px-5 py-12 text-center text-muted-foreground">
                                             No blocks found recently.
                                         </TableCell>
                                     </TableRow>

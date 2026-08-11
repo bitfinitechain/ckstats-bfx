@@ -82,6 +82,7 @@
      dark stops measured on #18181b; light stops on #ffffff / #f4f4f5. */
   --bfx-success-dark:  #34d399;   /*  9.22:1 */
   --bfx-success-light: #0d7547;   /*  5.75:1 / 5.23:1 */
+  /* in-progress: neither good nor bad (awaiting finality, coinbase maturing) */
   --bfx-warning-dark:  #fbbf24;   /* 10.61:1 */
   --bfx-warning-light: #975a03;   /*  5.56:1 / 5.05:1 */
   --bfx-danger-dark:   #f87171;   /*  6.40:1 */

@@ -29,6 +29,8 @@
   --destructive: var(--bfx-danger-light);
   --destructive-foreground: #ffffff;
 
+  --warning: var(--bfx-warning-light);
+  --warning-foreground: #ffffff;
   --success: var(--bfx-success-light);
   --success-foreground: #ffffff;
 
@@ -62,6 +64,8 @@
   --destructive: var(--bfx-danger-dark);
   --destructive-foreground: #450a0a;
 
+  --warning: var(--bfx-warning-dark);
+  --warning-foreground: #2a1a02;
   --success: var(--bfx-success-dark);
   --success-foreground: #052e21;
 
@@ -79,6 +83,8 @@
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
   --color-muted: var(--muted);

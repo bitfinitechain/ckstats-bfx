@@ -147,7 +147,7 @@ async function poll(io: Server) {
 }
 
 // Collect a full stats payload for ONE ckpool source (a logs directory).
-function collectSource(logsDir: string, key: string, network: { difficulty: number, networkHashrate: number }) {
+function collectSource(logsDir: string, key: string, network: { difficulty: number, networkHashrate: number, chainTip: number }) {
     const usersDir = path.join(logsDir, 'users');
 
     // Per-miner earnings (shared pool only). pool-payout/emit_earnings.py writes
@@ -182,6 +182,9 @@ function collectSource(logsDir: string, key: string, network: { difficulty: numb
         runtime: 0,
         networkHashrate: network.networkHashrate,
         difficulty: network.difficulty,
+        // Tip height, so the UI can show how far a solved block is from the
+        // 100-block coinbase maturity. Additive: existing consumers ignore it.
+        chainTip: network.chainTip,
         luck: 0,
     };
 
@@ -342,6 +345,7 @@ function collectSource(logsDir: string, key: string, network: { difficulty: numb
             runtime: globalStats.runtime,
             difficulty: globalStats.difficulty,
             networkHashrate: globalStats.networkHashrate,
+            chainTip: globalStats.chainTip,
             luck: globalStats.luck,
             earnings: earningsMeta,
         },
@@ -423,9 +427,14 @@ function readBlocks(ckpoolLog: string): any[] {
 }
 
 // Compute chain-wide network stats from the latest Electrum header. Same for all sources.
-async function getNetworkStats(): Promise<{ difficulty: number, networkHashrate: number }> {
+async function getNetworkStats(): Promise<{ difficulty: number, networkHashrate: number, chainTip: number }> {
     try {
         const header = await electrum.getLatestHeader();
+        // The header subscription already carries the tip height, so coinbase
+        // maturity costs no extra call. Needed because a pool block's reward
+        // is not spendable until COINBASE_MATURITY (100) blocks deep, and the
+        // blocks table showed the reward as though it were already money.
+        const chainTip = Number(header?.height) || 0;
         // blockchain.headers.subscribe returns the 80-byte header hex; nBits is a 4-byte
         // field at byte offset 72 (hex offset 144), little-endian.
         let bits: number | undefined;
@@ -442,12 +451,12 @@ async function getNetworkStats(): Promise<{ difficulty: number, networkHashrate:
             const difficulty = (0x00ffff / coefficient) * Math.pow(2, shift);
             // BitFinite targets 5-minute (300s) blocks.
             const networkHashrate = (difficulty * Math.pow(2, 32)) / 300;
-            return { difficulty, networkHashrate };
+            return { difficulty, networkHashrate, chainTip };
         }
     } catch (e) {
         // network stats are best-effort
     }
-    return { difficulty: 0, networkHashrate: 0 };
+    return { difficulty: 0, networkHashrate: 0, chainTip: 0 };
 }
 
 // Refresh one address's balance per tick (round-robin across BOTH sources' users),
