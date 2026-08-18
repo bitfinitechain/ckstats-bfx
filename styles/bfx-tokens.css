@@ -87,4 +87,33 @@
   --bfx-warning-light: #975a03;   /*  5.56:1 / 5.05:1 */
   --bfx-danger-dark:   #f87171;   /*  6.40:1 */
   --bfx-danger-light:  #c92a2a;   /*  5.46:1 / 4.96:1 */
+
+  /* ---- type scale ---------------------------------------------------------
+     Added 2026-08-18 after measuring what the platform actually uses: 27
+     distinct font sizes across 587 declarations. Seven of them were half-pixel
+     steps — 9.5, 10.5, 11.5, 12.5, 13.5, 14.5, 15.5 — every one used in exactly
+     one app, each sitting between two integer steps it is indistinguishable
+     from. That is not a scale, it is a continuum, and it is why the same nominal
+     size read differently between apps.
+
+     Ten steps, chosen from real usage rather than a ratio: 10 and 11 are the two
+     sizes all four apps already share, 12 and 13 are the next most used. Nothing
+     here is new to the platform; what is new is that there is now a finite list.
+
+     PRIMITIVES, deliberately numbered rather than named. Roles differ per app —
+     13px is body in analytics and a caption on the marketing site — so each app
+     maps these onto its own semantic names, exactly as it does with the palette.
+
+     Rule: if a design needs a size that is not on this list, the answer is the
+     nearest step, not a new token. Half-steps are how the last drift started. */
+  --bfx-text-100:  10px;   /* eyebrows, badges, table labels — 4/4 apps */
+  --bfx-text-200:  11px;   /* caption — 4/4 apps, the most used size on the platform */
+  --bfx-text-300:  12px;   /* small */
+  --bfx-text-400:  13px;   /* dense body — 3/4 apps */
+  --bfx-text-500:  14px;   /* body */
+  --bfx-text-600:  16px;   /* lead / comfortable body */
+  --bfx-text-700:  20px;   /* section heading */
+  --bfx-text-800:  24px;   /* page heading */
+  --bfx-text-900:  30px;   /* display */
+  --bfx-text-1000: 44px;   /* hero */
 }

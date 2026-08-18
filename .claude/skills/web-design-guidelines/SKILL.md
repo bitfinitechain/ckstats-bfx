@@ -172,6 +172,23 @@ The most common defect class.
 
 ## §5 Typography and numbers
 
+- **Use the scale: `--bfx-text-100 … --bfx-text-1000`** (10, 11, 12, 13, 14, 16,
+  20, 24, 30, 44). A size not on the list is a bug, not a decision — take the
+  nearest step. If a design genuinely needs a new one, add it to `tokens.css` so
+  all four apps get it; never inline.
+- **No half-steps.** Measured 2026-08-18: 27 distinct sizes across 587
+  declarations, seven of them half-pixel (9.5, 10.5, 11.5, 12.5, 13.5, 14.5,
+  15.5), each used in exactly one app. A 12.5 beside a 13 is invisible on screen
+  and doubles the vocabulary. One app used 25 of the 27; the other three used
+  nine between them. Half-steps are undetectable in review precisely because
+  they look almost right.
+- Roles are per-app — 13px is dense body in analytics and a caption on the
+  marketing site. Map the primitive to your own semantic name; do not rename the
+  primitive. A differing *body size* is fine and deliberate; differing *steps*
+  are not.
+- The typeface is **Geist / Geist Mono** across every app. A second family makes
+  identical px values render at different apparent sizes, which is exactly how
+  analytics came to look like a different product.
 - `font-variant-numeric: tabular-nums` wherever figures align in a column or
   update in place.
 - Fluid type (`clamp()`) for values that must fit a fixed box; a fixed size
