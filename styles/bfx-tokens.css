@@ -128,4 +128,30 @@
      and tinting it makes it read as a coloured glow over dark surfaces. */
   --bfx-elev-tooltip: 0 4px 14px rgb(0 0 0 / 0.35);
   --bfx-elev-popover: 0 10px 30px rgb(0 0 0 / 0.40);
+
+  /* ---- Controls & shell ------------------------------------------------
+     Measured across the four apps before writing these down, because a token
+     nobody matches is decoration:
+
+       focus ring   ring-2 + ring-offset-2 (ckstats) vs ring-[3px] + border-ring
+                    (analytics) — two shadcn generations, so the same keyboard
+                    affordance looked different depending which app you were in.
+       control h    h-11 (ckstats) vs h-8/h-9 (analytics) for the same role.
+       radius       raw buttons use rounded-lg 30x, rounded-md 14x and
+                    rounded-full 13x IN ONE APP.
+       track        1600px in web/explorer/analytics, absent in ckstats.
+
+     Radius and height are stated here so a raw <button> can match a component
+     one without importing it — most of our buttons are still raw elements. */
+  --bfx-control-h-sm: 32px;
+  --bfx-control-h-md: 36px;
+  --bfx-control-h-lg: 44px;   /* the 44px touch target, not a bigger button */
+  --bfx-radius-control: 8px;
+  --bfx-focus-ring: 3px;      /* width; the colour is each app's own ring token */
+
+  /* The centred content track. ckstats deliberately does NOT use this — its
+     header runs full width behind a `container mx-auto`, a production tweak made
+     on the box. Recorded so the difference stays a decision. */
+  --bfx-track: 1600px;
+  --bfx-header-h: 64px;
 }

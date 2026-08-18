@@ -6,6 +6,10 @@ function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs))
 }
 
+// Focus ring aligned with the rest of the platform (Brandkit --bfx-focus-ring).
+// This file was vendored from an older shadcn than the other apps', so the same
+// keyboard affordance was a 2px offset ring here and a 3px inset ring next door.
+// A focus indicator that changes between our own products teaches nothing.
 const buttonVariants = {
     default: "bg-primary text-primary-foreground hover:bg-primary/90",
     destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
@@ -36,7 +40,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         return (
             <Comp
                 className={cn(
-                    "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+                    "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:border-ring focus-visible:ring-ring focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50",
                     buttonVariants[variant],
                     buttonSizes[size],
                     className

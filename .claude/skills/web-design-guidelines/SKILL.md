@@ -223,6 +223,25 @@ The most common defect class.
 - **Headless primitives keep this working**: Radix carries behaviour, our tokens
   carry appearance, so one component renders two design languages with no
   conditional. A styled component library would fight the mode system.
+- **The lockup is a component, never markup.** `Brandkit/ui/wordmark.tsx`, synced
+  by `skills/sync.sh`. Four apps once hand-rolled `BIT<span>FINITE</span>` and
+  had already disagreed about which half carries the accent. Structure and type
+  come from the component; colour stays local — each app maps its own semantic
+  tokens onto `--wm-fg` / `--wm-accent`, because the apps do not share semantic
+  names (`--foreground`/`--primary` vs `--fg`/`--acc`).
+- **A control's radius, height and focus ring come from `--bfx-*`.** One app was
+  using `rounded-lg` 30x, `rounded-md` 14x and `rounded-full` 13x for buttons.
+  Two apps carried different shadcn generations, so the same keyboard affordance
+  was a 2px offset ring in one and a 3px inset ring in the next — a focus
+  indicator that changes between our own products teaches nothing.
+- **shadcn primitives are vendored per repo**, so Brandkit does not own
+  `button.tsx`. It owns the values that must agree across them, and re-running
+  the shadcn CLI is expected to need the focus ring re-aligned.
+- **A card in a seam grid cannot shrink to its content.** The 1px gaps ARE the
+  rules, so a short card punches an L-shaped hole where a clean line belongs.
+  Either give the card something that fills, or spread what it has — never leave
+  the slack as one void at the bottom. Measure it: for each card in a row,
+  `rect.bottom - lastChild.rect.bottom` should be the same number.
 - **Access changes run `pnpm audit:access`** and update the asserted matrix in the
   same commit.
 - **Dependencies**: exact pins, committed lockfile, `--frozen-lockfile` on the
