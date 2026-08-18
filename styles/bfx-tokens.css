@@ -116,4 +116,16 @@
   --bfx-text-800:  24px;   /* page heading */
   --bfx-text-900:  30px;   /* display */
   --bfx-text-1000: 44px;   /* hero */
+
+  /* ---- Elevation -------------------------------------------------------
+     Two tiers, because a product only has two "floating above" relationships:
+     a transient readout attached to a mark, and a panel the reader opened.
+     Six components in analytics each shipped their own alpha (.28 / .35 / .40
+     / .45) for the same two jobs — close enough to look accidental, far enough
+     apart to look inconsistent when two are open at once.
+
+     Pure black at alpha, not a tinted neutral: a shadow is absence of light,
+     and tinting it makes it read as a coloured glow over dark surfaces. */
+  --bfx-elev-tooltip: 0 4px 14px rgb(0 0 0 / 0.35);
+  --bfx-elev-popover: 0 10px 30px rgb(0 0 0 / 0.40);
 }
