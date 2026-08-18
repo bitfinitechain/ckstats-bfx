@@ -16,7 +16,7 @@
   margin-left: .45em; font-weight: 400; opacity: .8;
   letter-spacing: .01em; color: var(--wm-fg, currentColor);
 }
-.bfx-wm--sm { font-size: 17px; }
+.bfx-wm--sm { font-size: 16px; }   /* --bfx-text-600; 17px was off the scale */
 .bfx-wm--md { font-size: 20px; }
 .bfx-wm--lg { font-size: 24px; }
 /* Steps 20 -> 24 at the tablet breakpoint. The explorer needs this and learned it
