@@ -6,6 +6,7 @@ import { Menu, X } from "lucide-react";
 import { useState } from "react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { usePathname } from "next/navigation";
+import { Wordmark } from '@/components/ui/wordmark';
 
 export default function Header() {
     const [isOpen, setIsOpen] = useState(false);
@@ -38,9 +39,9 @@ export default function Header() {
                                 height={48}
                                 className="w-12 h-12 rounded-full object-cover"
                             />
-                            <span className="text-2xl font-bold tracking-tight whitespace-nowrap">
-                                BIT<span className="text-primary">FINITE</span>
-                            </span>
+                            {/* Shared lockup — Brandkit/ui/wordmark.tsx; it carries its own
+                                nowrap, so the whitespace-nowrap here was redundant. */}
+                            <Wordmark size="lg" />
                         </Link>
                     </div>
 
