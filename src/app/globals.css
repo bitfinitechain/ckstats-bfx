@@ -6,6 +6,10 @@
 @import "../components/ui/wordmark.css";
 @import "../components/ui/data-table.css";
 
+/* Tailwind v4 does not scan node_modules, so a class used only inside a Brandkit
+   component would never be generated and the component would render unstyled. */
+@source "../../node_modules/@bitfinitechain/brandkit/ui";
+
 /* ---- Tailwind v4 bridge -----------------------------------------------------
    Maps this app's semantic CSS variables onto Tailwind colour utilities, so
    `bg-card` / `text-muted-foreground` / `border-border` resolve. Shared Brandkit

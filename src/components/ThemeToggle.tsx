@@ -1,20 +1,27 @@
 "use client";
 
-import * as React from "react";
-import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
+import { ThemeToggle as BrandThemeToggle } from "@bitfinitechain/brandkit";
 
+// The button comes from Brandkit; the wiring stays here. Four apps had four of
+// these and they had drifted into two different-looking controls — this one and
+// its two siblings render the `ghost` variant, analytics the `outline` one to
+// match its dense ops chrome.
+//
+// resolvedTheme, not theme. These apps enable `enableSystem`, so `theme` can
+// hold "system", and the old code compared THAT against "light". For anyone
+// carrying a stored "system" preference on a light OS the first click set light
+// — which it already was — so the button did nothing until the second press.
+// resolvedTheme is what is actually on screen, which is what a toggle flips.
 export function ThemeToggle() {
-    const { setTheme, theme } = useTheme();
+    const { setTheme, resolvedTheme } = useTheme();
+    const theme = resolvedTheme === "light" ? "light" : "dark";
 
     return (
-        <button
-            onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-            className="relative p-2 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground focus:outline-none"
-            aria-label="Toggle theme"
-        >
-            <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-            <Moon className="absolute top-2 left-2 h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-        </button>
+        <BrandThemeToggle
+            theme={theme}
+            onToggle={() => setTheme(theme === "dark" ? "light" : "dark")}
+            variant="ghost"
+        />
     );
 }
