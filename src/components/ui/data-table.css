@@ -1,0 +1,20 @@
+/* GENERATED — do not edit here.
+   Canonical: Brandkit/ui/data-table.css   ·   update there, then: bash skills/sync.sh */
+/* Behaviour that cannot be expressed in the colour contract alone, owned by the
+   package instead of borrowed from whichever app happened to define it.
+   `ops-only-sm`, `ops-hoverrow` and `--hov` all live in analytics' globals; a
+   component reaching for them renders correctly there and loses hover, focus and
+   the overflow hint everywhere else, with nothing to report it. */
+
+/* The swipe hint belongs to the width where these tables actually overflow. */
+.bfx-dt__hint { display: none; }
+@media (max-width: 640px) { .bfx-dt__hint { display: block; } }
+
+/* A navigable row. The focus ring is the point: it is the only affordance a
+   keyboard user gets, and it was previously supplied by an app-local class. */
+.bfx-dt__row-link { text-decoration: none; cursor: pointer; }
+.bfx-dt__row-link:hover { background: color-mix(in srgb, currentColor 6%, transparent); }
+.bfx-dt__row-link:focus-visible {
+  outline: var(--bfx-focus-ring, 3px) solid var(--ring, currentColor);
+  outline-offset: -2px;
+}
