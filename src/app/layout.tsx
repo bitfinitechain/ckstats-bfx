@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "@/components/ThemeProvider";
+import { ThemeProvider } from '@bitfinitechain/brandkit/ui/theme-provider';
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
@@ -34,12 +34,9 @@ export default function RootLayout({
       <body
         className={`antialiased min-h-screen flex flex-col bg-background text-foreground`}
       >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem
-          disableTransitionOnChange
-        >
+        {/* attribute / defaultTheme / enableSystem / disableTransitionOnChange
+            are the shared provider's defaults — three apps repeated all four. */}
+        <ThemeProvider>
           <Header />
           <main className="flex-grow w-full max-w-[1600px] mx-auto px-6 md:px-10 py-6 md:py-8">
             {children}
