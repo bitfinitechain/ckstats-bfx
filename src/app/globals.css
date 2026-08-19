@@ -5,6 +5,34 @@
 @import "../../styles/bfx-tokens.css";
 @import "../components/ui/wordmark.css";
 
+/* ---- Tailwind v4 bridge -----------------------------------------------------
+   Maps this app's semantic CSS variables onto Tailwind colour utilities, so
+   `bg-card` / `text-muted-foreground` / `border-border` resolve. Shared Brandkit
+   components are written against exactly these names — the contract is in
+   Brandkit/ui/README.md — which is what lets one component render correctly in
+   four apps that each choose their own values for them. */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
+
 :root {
   /* BitFinite Light Mode */
   --background: #ffffff;
@@ -13,6 +41,14 @@
   --card: var(--bfx-zinc-100);
   --card-foreground: var(--bfx-zinc-950);
 
+  /* Required by the shared component contract (Brandkit/ui/README.md). Derived
+     from this app's own semantics rather than pinned, so they follow the theme:
+     a popover sits on the same ground as a card, and secondary is the quiet fill
+     this app already calls --muted. */
+  --popover: var(--card);
+  --popover-foreground: var(--card-foreground);
+  --secondary: var(--muted);
+
   /* BitFinite Brand Blue */
   --primary: var(--bfx-blue-700);
   --primary-foreground: #ffffff;
@@ -20,7 +56,7 @@
   --secondary: var(--bfx-zinc-100);
   --secondary-foreground: var(--bfx-zinc-950);
 
-  --muted: #f4f4f5;
+  --muted: var(--bfx-zinc-100);   /* was #f4f4f5 — the same colour, spelled off-palette */
   --muted-foreground: var(--bfx-zinc-550);
 
   --accent: var(--bfx-zinc-100);
@@ -48,6 +84,14 @@
 
   --card: var(--bfx-zinc-900);
   --card-foreground: var(--bfx-zinc-50);
+
+  /* Required by the shared component contract (Brandkit/ui/README.md). Derived
+     from this app's own semantics rather than pinned, so they follow the theme:
+     a popover sits on the same ground as a card, and secondary is the quiet fill
+     this app already calls --muted. */
+  --popover: var(--card);
+  --popover-foreground: var(--card-foreground);
+  --secondary: var(--muted);
 
   /* BitFinite Brand Blue */
   --primary: var(--bfx-blue-600);
