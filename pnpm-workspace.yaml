@@ -1,3 +1,12 @@
+# pnpm 11 REQUIRES this field once a pnpm-workspace.yaml exists at all: without it
+# every command fails with "packages field missing or empty". This repo is a single
+# package, not a monorepo -- the file exists only to carry onlyBuiltDependencies,
+# allowBuilds and overrides -- so '.' is the whole workspace. seed-1 runs pnpm 10.26,
+# which does not require it, which is why the local build broke while the server
+# build kept working.
+packages:
+  - '.'
+
 onlyBuiltDependencies:
   - '@prisma/client'
   - '@prisma/engines'

@@ -55,6 +55,38 @@ export default function Header() {
             }
             actions={
                 <>
+                    {/* The desktop nav lives in `actions`, NOT in children, and carries
+                        no ml-auto. Two auto-margin siblings SPLIT the free space between
+                        them, so a nav with ml-auto beside AppHeader's ml-auto actions
+                        wrapper parked the links mid-bar with the toggle marooned at the
+                        far right. One group, one auto margin -- which is how the explorer
+                        does it, and what `justify-between` gave this header before. */}
+                {/* gap-x-5 at md, opening to 8 at lg. With shrink-0 on the wordmark the
+                    squeeze moved from the logo to the row: Geist needs 748px of nav in
+                    the 736px a 768px tablet gives. Five links fit at the tighter gap, so
+                    this keeps the full nav at tablet width instead of dropping to a
+                    hamburger the way the ten-link web nav has to. */}
+                <nav className="hidden md:flex items-center gap-x-5 lg:gap-x-8">
+                    {navigation.map((item) => (
+                        <Link
+                            key={item.name}
+                            href={item.href}
+                            {...ext(item)}
+                            className={`text-lg font-bold transition-colors flex items-center gap-1 ${pathname === item.href
+                                ? "text-primary"
+                                : "text-muted-foreground hover:text-primary"}`}
+                        >
+                            {item.name}
+                            {item.external && (
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                     strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                                     aria-hidden="true" className="opacity-70">
+                                    <path d="M7 17 17 7M9 7h8v8" />
+                                </svg>
+                            )}
+                        </Link>
+                    ))}
+                </nav>
                     {/* One toggle, not two. This file rendered it twice — once inside
                         the desktop nav and once in the mobile cluster — which is only
                         invisible because the two are never shown at the same width. */}
@@ -88,33 +120,6 @@ export default function Header() {
                     </div>
                 </nav>
             ) : null}
-        >
-            {/* gap-x-5 at md, opening to 8 at lg. With shrink-0 on the wordmark the
-                squeeze moved from the logo to the row: Geist needs 748px of nav in
-                the 736px a 768px tablet gives. Five links fit at the tighter gap, so
-                this keeps the full nav at tablet width instead of dropping to a
-                hamburger the way the ten-link web nav has to. */}
-            <nav className="ml-auto hidden md:flex items-center gap-x-5 lg:gap-x-8">
-                {navigation.map((item) => (
-                    <Link
-                        key={item.name}
-                        href={item.href}
-                        {...ext(item)}
-                        className={`text-lg font-bold transition-colors flex items-center gap-1 ${pathname === item.href
-                            ? "text-primary"
-                            : "text-muted-foreground hover:text-primary"}`}
-                    >
-                        {item.name}
-                        {item.external && (
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                 strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-                                 aria-hidden="true" className="opacity-70">
-                                <path d="M7 17 17 7M9 7h8v8" />
-                            </svg>
-                        )}
-                    </Link>
-                ))}
-            </nav>
-        </AppHeader>
+        />
     );
 }
