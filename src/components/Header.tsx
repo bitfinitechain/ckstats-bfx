@@ -47,9 +47,19 @@ export default function Header() {
             // default and widening at sm.
             padding="dense"
             brand={
-                <Link href="/" className="flex items-center space-x-3">
-                    <Image src="/logo.png" alt="BitFinite Logo" width={48} height={48}
-                           className="w-12 h-12 rounded-full object-cover" />
+                <Link href="/" className="flex items-center gap-3 group shrink-0">
+                    {/* Same treatment as the explorer, so the two brands are one lockup:
+                        32px stepping to 40 at md, `fill` + object-contain, and the hover
+                        scale (which needs `group` on this Link).
+
+                        Was a flat 48px with rounded-full + object-cover. Two problems.
+                        It ran 20% larger than every other BFX header, and logo.png is
+                        1024x1030 -- NOT square -- so object-cover cropped it and
+                        rounded-full clipped the corners, while the explorer showed the
+                        same file whole. Both apps ship the byte-identical asset. */}
+                    <div className="relative w-8 h-8 md:w-10 md:h-10 transition-transform group-hover:scale-110">
+                        <Image src="/logo.png" alt="BitFinite Logo" fill className="object-contain" />
+                    </div>
                     <Wordmark size="lg" />
                 </Link>
             }
