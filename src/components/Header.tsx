@@ -31,9 +31,20 @@ export default function Header() {
         // did not. The element is now <header> containing <nav>, rather than <nav>
         // wrapped around the brand and the theme button, which are not navigation.
         <AppHeader
-            maxWidth="100%"
-            // container mx-auto px-4 previously — dense keeps the 12/16px gutters
-            // rather than inheriting the shared default and widening at sm.
+            // 1600 matches this app's own content track (layout.tsx: max-w-[1600px])
+            // and the explorer's header, so the three line up.
+            //
+            // This was maxWidth="100%" and that was a mistranslation of the header
+            // it replaced. The original was `container mx-auto px-4`, and Tailwind's
+            // `container` CAPS at each breakpoint (1536px at 2xl) — it is not full
+            // width. Carrying the gutter across but dropping the cap put the logo
+            // 144px to the LEFT of the page content at 1920px, while looking correct
+            // at 1440 and below where the cap never applies. Measured, both sites:
+            //   1920  explorer track 1600, brand 176, main 160  -> brand +16
+            //   1920  ckpool   track 1920, brand  16, main 160  -> brand -144
+            maxWidth={1600}
+            // dense keeps the 12/16px gutters rather than inheriting the shared
+            // default and widening at sm.
             padding="dense"
             brand={
                 <Link href="/" className="flex items-center space-x-3">
