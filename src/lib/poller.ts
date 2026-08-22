@@ -1,12 +1,9 @@
 import fs from 'fs';
 import path from 'path';
 import { Server } from 'socket.io';
-import { PrismaClient } from '@prisma/client';
 import { redis } from './redis';
 import { parseHashrate } from './utils';
 import { electrum, isValidAddress } from './electrum';
-
-const prisma = new PrismaClient();
 
 // Two ckpool sources feed the dashboard's Solo / Pool tabs:
 //  - SOLO: seed-1's ckpool running in -B (solo) mode.
