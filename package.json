@@ -10,7 +10,7 @@
     "check:shadcn": "./scripts/check-shadcn.sh"
   },
   "dependencies": {
-    "@bitfinitechain/brandkit": "github:bitfinitechain/Brandkit#v1.5.0",
+    "@bitfinitechain/brandkit": "github:bitfinitechain/Brandkit#v1.6.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dotenv": "^17.2.3",
