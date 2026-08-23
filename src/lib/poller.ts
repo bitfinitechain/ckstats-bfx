@@ -5,7 +5,7 @@ import { redis } from './redis';
 import { parseHashrate } from './utils';
 import { electrum, isValidAddress } from './electrum';
 
-// Five ckpool sources feed the dashboard (three modes x primary/failover):
+// Six ckpool sources feed the dashboard (three modes x primary/failover):
 //  - SOLO: seed-1's ckpool running in -B (solo) mode.
 //  - POOL: seed-3's ckpool running in shared/pool mode.
 // Each source is just a ckpool logs directory containing users/, pool/pool.status
@@ -29,6 +29,10 @@ const POOL2_LOGS_DIR = process.env.POOL2_CKPOOL_LOGS_DIR || '';
 // to the finder, so unlike the shared pools it has no payout script and no
 // earnings.json. Optional; empty = the Failover/Solo combination shows "off".
 const SOLO2_LOGS_DIR = process.env.SOLO2_CKPOOL_LOGS_DIR || '';
+// Failover HIGH-DIFF instance (:3334 on the failover host), fixed difficulty
+// 262144 to match the primary. Solo-style: coinbase pays the finder, no payout
+// script. Optional; empty = the Failover/High-Diff combination shows "off".
+const HIGHDIFF2_LOGS_DIR = process.env.HIGHDIFF2_CKPOOL_LOGS_DIR || '';
 
 // ckpool keeps a per-user state file that survives across restarts AND across the
 // chain re-anchor, so miners from the previous (old-genesis) chain linger as "active
@@ -84,7 +88,8 @@ export async function startPoller(io: Server) {
         + `${POOL_LOGS_DIR ? `, pool: ${POOL_LOGS_DIR}` : ' (pool source not configured)'}`
         + `${RENTAL_LOGS_DIR ? `, highdiff: ${RENTAL_LOGS_DIR}` : ''}`
         + `${POOL2_LOGS_DIR ? `, pool2: ${POOL2_LOGS_DIR}` : ' (pool2 source not configured)'}`
-        + `${SOLO2_LOGS_DIR ? `, solo2: ${SOLO2_LOGS_DIR}` : ' (solo2 source not configured)'}`);
+        + `${SOLO2_LOGS_DIR ? `, solo2: ${SOLO2_LOGS_DIR}` : ' (solo2 source not configured)'}`
+        + `${HIGHDIFF2_LOGS_DIR ? `, highdiff2: ${HIGHDIFF2_LOGS_DIR}` : ' (highdiff2 source not configured)'}`);
 
     // Ensure Electrum connection
     try {
@@ -144,6 +149,12 @@ async function poll(io: Server) {
         const s2 = collectSource(SOLO2_LOGS_DIR, 'solo2', network);
         if (s2.global.users > 0 || s2.blocks.length > 0) solo2 = s2;
     }
+    // High-Diff-2 (failover high-difficulty solo pool, port 3334 on that host).
+    let highdiff2 = null;
+    if (HIGHDIFF2_LOGS_DIR) {
+        const h2 = collectSource(HIGHDIFF2_LOGS_DIR, 'highdiff2', network);
+        if (h2.global.users > 0 || h2.blocks.length > 0) highdiff2 = h2;
+    }
 
     // Log the emit only when the numbers actually CHANGE. This fired on every
     // tick, and since the counts are stable for hours it wrote the identical line
@@ -155,7 +166,8 @@ async function poll(io: Server) {
         + (pool ? `, pool: ${pool.global.users} users / ${pool.blocks.length} blocks` : ', pool: n/a')
         + (rental ? `, highdiff: ${rental.global.users} users / ${rental.blocks.length} blocks` : ', highdiff: n/a')
         + (pool2 ? `, pool2: ${pool2.global.users} users / ${pool2.blocks.length} blocks` : ', pool2: n/a')
-        + (solo2 ? `, solo2: ${solo2.global.users} users / ${solo2.blocks.length} blocks` : ', solo2: n/a');
+        + (solo2 ? `, solo2: ${solo2.global.users} users / ${solo2.blocks.length} blocks` : ', solo2: n/a')
+        + (highdiff2 ? `, highdiff2: ${highdiff2.global.users} users / ${highdiff2.blocks.length} blocks` : ', highdiff2: n/a');
     if (process.env.STATS_LOG_EVERY_TICK === '1' || emitSummary !== lastEmitSummary) {
         console.log(`Emitting stats — ${emitSummary}`);
         lastEmitSummary = emitSummary;
@@ -166,6 +178,7 @@ async function poll(io: Server) {
     io.emit('rentalStats', rental);  // high-diff (3334) payload, or null when idle / not configured
     io.emit('pool2Stats', pool2);    // failover shared pool (3335) payload, or null when idle / not configured
     io.emit('solo2Stats', solo2);    // failover solo pool payload, or null when idle / not configured
+    io.emit('highdiff2Stats', highdiff2); // failover high-diff payload, or null when idle / not configured
 
     try {
         await redis.set('latest_stats', JSON.stringify(solo));
@@ -173,6 +186,7 @@ async function poll(io: Server) {
         await redis.set('latest_rental_stats', JSON.stringify(rental));
         await redis.set('latest_pool2_stats', JSON.stringify(pool2));
         await redis.set('latest_solo2_stats', JSON.stringify(solo2));
+        await redis.set('latest_highdiff2_stats', JSON.stringify(highdiff2));
     } catch (e) {
         console.error("Redis save failed:", e);
     }
@@ -499,6 +513,7 @@ function refreshOneBalance() {
     if (RENTAL_LOGS_DIR) dirs.push(path.join(RENTAL_LOGS_DIR, 'users'));
     if (POOL2_LOGS_DIR) dirs.push(path.join(POOL2_LOGS_DIR, 'users'));
     if (SOLO2_LOGS_DIR) dirs.push(path.join(SOLO2_LOGS_DIR, 'users'));
+    if (HIGHDIFF2_LOGS_DIR) dirs.push(path.join(HIGHDIFF2_LOGS_DIR, 'users'));
 
     const files: string[] = [];
     for (const d of dirs) {

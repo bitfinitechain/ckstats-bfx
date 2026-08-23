@@ -5,7 +5,7 @@ export type MiningMode = "solo" | "pool" | "highdiff";
 /** Which hardware runs it: the primary instance, or its failover on separate hardware. */
 export type MiningTier = "primary" | "failover";
 /** One concrete ckpool instance — a log directory, a socket event, a Redis key. */
-export type SourceKey = "solo" | "pool" | "highdiff" | "solo2" | "pool2";
+export type SourceKey = "solo" | "pool" | "highdiff" | "solo2" | "pool2" | "highdiff2";
 
 export const MINING_MODES = ["solo", "pool", "highdiff"] as const;
 export const MINING_TIERS = ["primary", "failover"] as const;
@@ -35,7 +35,7 @@ export const TIER_LABEL: Record<MiningTier, string> = {
  */
 export const SOURCE_BY: Record<MiningTier, Record<MiningMode, SourceKey | null>> = {
     primary: { solo: "solo", pool: "pool", highdiff: "highdiff" },
-    failover: { solo: "solo2", pool: "pool2", highdiff: null },
+    failover: { solo: "solo2", pool: "pool2", highdiff: "highdiff2" },
 };
 
 export function sourceKeyFor(mode: MiningMode, tier: MiningTier): SourceKey | null {
@@ -118,6 +118,21 @@ export const MINING_SOURCES: Record<SourceKey, MiningSource> = {
         shared: false,
         longName: "failover solo",
         emptyWorkers: "No Solo-2 miners yet",
+    },
+    highdiff2: {
+        workersTitle: "High-Diff-2 Workers",
+        event: "highdiff2Stats",
+        redisKey: "latest_highdiff2_stats",
+        empty: {
+            heading: "No high-difficulty miners on the failover host",
+            blurb:
+                "Fixed difficulty 262,144, same as the primary — big ASICs and rented rigs only. " +
+                "A small miner pointed here will sit a very long time between shares. Point a large rig at",
+            stratum: "stratum+tcp://solo-2.bitfinitechain.org:3334",
+        },
+        shared: false,
+        longName: "failover high-difficulty solo",
+        emptyWorkers: "No High-Diff-2 miners yet",
     },
     pool2: {
         workersTitle: "Pool-2 Workers",
