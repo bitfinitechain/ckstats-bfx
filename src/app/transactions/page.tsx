@@ -88,7 +88,9 @@ export default function PayoutsPage() {
                             <p className="text-sm text-muted-foreground mt-2">
                                 {isPool ? (
                                     <>
-                                        Blocks solved on the BitFinite <span className="font-semibold text-foreground">{MINING_SOURCES[mode].longName}</span> pool.
+                                        Blocks solved on the BitFinite{" "}
+                                        <span className="font-semibold text-foreground">{MINING_SOURCES[mode].longName}</span>{" "}
+                                        pool.
                                         Each block&rsquo;s <span className="font-semibold text-foreground">50 BFX</span> subsidy is paid to the
                                         pool and then distributed to <span className="font-semibold text-foreground">all contributors in
                                         proportion to their shares</span> — the finder shown below does not receive the full reward.
