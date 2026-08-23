@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSocket } from "@/hooks/useSocket";
-import { useMiningMode, MINING_SOURCES } from "@/store/miningMode";
+import { useMiningMode, MINING_SOURCES, sourceKeyFor } from "@/store/miningMode";
 import { formatHashrate, obfuscateAddress } from "@/lib/utils";
 import { WorkerSearch } from "@/components/WorkerSearch";
 import MiningTabs, { SourceEmpty } from "@/components/MiningTabs";
@@ -25,7 +25,7 @@ const PAGE_SIZES = [10, 25, 50, 100];
 
 export default function WorkersPage() {
     const { isConnected, stats, sources } = useSocket();
-    const { mode } = useMiningMode();
+    const { mode, tier } = useMiningMode();
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(25);
     const [activeOnly, setActiveOnly] = useState(true);
@@ -45,7 +45,9 @@ export default function WorkersPage() {
         );
     }
 
-    const active = sources[mode];
+    const sk = sourceKeyFor(mode, tier);
+    const src = sk ? MINING_SOURCES[sk] : null;
+    const active = sk ? sources[sk] : null;
     const allUsers = active?.users ?? [];
     // ckpool keeps a state file per miner forever, so most of this list is miners who
     // have gone away (86% of the solo list had 0 workers). Default to those actually
@@ -63,11 +65,11 @@ export default function WorkersPage() {
             </PageHeading>
 
             {!active ? (
-                <SourceEmpty mode={mode} />
+                <SourceEmpty sourceKey={sk} mode={mode} tier={tier} />
             ) : (
                 <Card>
                     <CardTitleRow
-                        title={MINING_SOURCES[mode].workersTitle}
+                        title={src?.workersTitle ?? ""}
                         right={
                             <div className="flex items-center gap-4">
                                 <WorkerSearch />
@@ -136,7 +138,7 @@ export default function WorkersPage() {
                             ) : (
                                 <TableRow>
                                     <TableCell colSpan={4} className="px-5 py-12 text-center text-muted-foreground">
-                                        {activeOnly && idleCount > 0 ? "No miners currently connected — untick \u201cConnected only\u201d to see miners who have mined here before." : `${MINING_SOURCES[mode].emptyWorkers}.`}
+                                        {activeOnly && idleCount > 0 ? "No miners currently connected — untick \u201cConnected only\u201d to see miners who have mined here before." : `${src?.emptyWorkers ?? ""}.`}
                                     </TableCell>
                                 </TableRow>
                             )}

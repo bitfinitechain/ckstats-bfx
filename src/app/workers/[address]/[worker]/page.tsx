@@ -2,7 +2,7 @@
 
 import { use, useEffect, useState } from 'react';
 import { useSocket } from '@/hooks/useSocket';
-import { MINING_MODES } from '@/store/miningMode';
+import { SOURCE_KEYS } from '@/store/miningMode';
 import { hashrateSuffix, abbreviateNumber, diffToNowDHM, formatHashrate, getBlockReward, formatBFX } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
 import { CardTitleRow } from '@/components/CardTitleRow';
@@ -64,7 +64,7 @@ export default function IndividualWorkerPage({ params }: { params: Promise<{ add
         // Prefer the source that actually contains this worker (else the most
         // recently active one) so a stale solo record can't mask the live pool
         // record and hide the worker's stats.
-        const candidates = MINING_MODES.map((m) => sources[m])
+        const candidates = SOURCE_KEYS.map((m) => sources[m])
             .map((s: any) => ({ s, u: findIn(s) }))
             .filter((c: any) => c.u);
         candidates.sort((a: any, b: any) => {

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSocket } from "@/hooks/useSocket";
-import { useMiningMode, MINING_SOURCES, type MiningMode } from "@/store/miningMode";
+import { useMiningMode, MINING_SOURCES, sourceKeyFor, type MiningMode, type MiningTier } from "@/store/miningMode";
 import { formatHashrate, diffToNowDHM, obfuscateAddress } from "@/lib/utils";
 import Tiles from "@/components/Tiles";
 import MiningTabs, { SourceEmpty } from "@/components/MiningTabs";
@@ -21,7 +21,7 @@ import {
 
 export default function Dashboard() {
     const { isConnected, stats, sources } = useSocket();
-    const { mode } = useMiningMode();
+    const { mode, tier } = useMiningMode();
 
     // Initial connection — no data at all yet.
     if (!stats) {
@@ -36,7 +36,9 @@ export default function Dashboard() {
         );
     }
 
-    const active = sources[mode];
+    const sk = sourceKeyFor(mode, tier);
+    const src = sk ? MINING_SOURCES[sk] : null;
+    const active = sk ? sources[sk] : null;
 
     return (
         <div>
@@ -47,16 +49,16 @@ export default function Dashboard() {
             {active ? (
                 <>
                     <Tiles stats={active} />
-                    <WorkersCard stats={active} isConnected={isConnected} mode={mode} />
+                    <WorkersCard stats={active} isConnected={isConnected} title={src?.workersTitle ?? ""} emptyLine={src?.emptyWorkers ?? ""} />
                 </>
             ) : (
-                <SourceEmpty mode={mode} />
+                <SourceEmpty sourceKey={sk} mode={mode} tier={tier} />
             )}
         </div>
     );
 }
 
-function WorkersCard({ stats, isConnected, mode }: { stats: any; isConnected: boolean; mode: MiningMode }) {
+function WorkersCard({ stats, isConnected, title, emptyLine }: { stats: any; isConnected: boolean; title: string; emptyLine: string }) {
     // Same rule as /workers: ckpool keeps a state file per miner forever, so most of
     // this list is miners who have gone away — showing them made every row read "0
     // workers". This card is a summary, so it always shows connected miners only; the
@@ -64,7 +66,6 @@ function WorkersCard({ stats, isConnected, mode }: { stats: any; isConnected: bo
     const allUsers = stats?.users ?? [];
     const users = allUsers.filter((u: any) => Number(u.workers || 0) > 0);
     const idleCount = allUsers.length - users.length;
-    const title = MINING_SOURCES[mode].workersTitle;
 
     return (
         <Card>
@@ -110,7 +111,7 @@ function WorkersCard({ stats, isConnected, mode }: { stats: any; isConnected: bo
                         ))) : (
                         <TableRow>
                             <TableCell colSpan={4} className="px-5 py-12 text-center text-muted-foreground">
-                                {idleCount > 0 ? "No miners connected right now" : MINING_SOURCES[mode].emptyWorkers}
+                                {idleCount > 0 ? "No miners connected right now" : emptyLine}
                             </TableCell>
                         </TableRow>
                     )}

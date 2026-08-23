@@ -1,7 +1,7 @@
 "use client";
 
 import { useSocket } from "@/hooks/useSocket";
-import { useMiningMode, MINING_SOURCES } from "@/store/miningMode";
+import { useMiningMode, MINING_SOURCES, sourceKeyFor } from "@/store/miningMode";
 import MiningTabs, { SourceEmpty } from "@/components/MiningTabs";
 import { Card } from "@/components/ui/card";
 import { LivePill } from "@/components/CardTitleRow";
@@ -24,7 +24,7 @@ import React from 'react';
 
 export default function PayoutsPage() {
     const { isConnected, stats, sources } = useSocket();
-    const { mode } = useMiningMode();
+    const { mode, tier } = useMiningMode();
 
     const [currentPage, setCurrentPage] = React.useState(1);
     const ITEMS_PER_PAGE = 20;
@@ -43,13 +43,15 @@ export default function PayoutsPage() {
         );
     }
 
-    const active = sources[mode];
+    const sk = sourceKeyFor(mode, tier);
+    const src = sk ? MINING_SOURCES[sk] : null;
+    const active = sk ? sources[sk] : null;
     const blocks = active?.blocks ?? [];
 
     // The shared pool is PPLNS: each block's coinbase goes to the pool address and
     // is then split among all contributors by shares — the finder does NOT pocket
     // the full 50 BFX. Solo / high-diff are coinbase-to-finder (finder gets it all).
-    const isPool = MINING_SOURCES[mode].shared;
+    const isPool = src?.shared ?? false;
 
     // Each row is a block this source solved; the payout is that block's coinbase reward.
     const now = Date.now();
@@ -67,7 +69,7 @@ export default function PayoutsPage() {
             </PageHeading>
 
             {!active ? (
-                <SourceEmpty mode={mode} />
+                <SourceEmpty sourceKey={sk} mode={mode} tier={tier} />
             ) : (
                 <>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mb-5">
@@ -89,7 +91,7 @@ export default function PayoutsPage() {
                                 {isPool ? (
                                     <>
                                         Blocks solved on the BitFinite{" "}
-                                        <span className="font-semibold text-foreground">{MINING_SOURCES[mode].longName}</span>{" "}
+                                        <span className="font-semibold text-foreground">{src?.longName}</span>{" "}
                                         pool.
                                         Each block&rsquo;s <span className="font-semibold text-foreground">50 BFX</span> subsidy is paid to the
                                         pool and then distributed to <span className="font-semibold text-foreground">all contributors in
@@ -98,7 +100,7 @@ export default function PayoutsPage() {
                                 ) : (
                                     <>
                                         Coinbase rewards paid directly to miners who solved a block on the BitFinite{" "}
-                                        {MINING_SOURCES[mode].longName} pool.
+                                        {src?.longName} pool.
                                         Each reward is the block subsidy — <span className="font-semibold text-foreground">50 BFX</span>,
                                         halving every 210,000 blocks.
                                     </>

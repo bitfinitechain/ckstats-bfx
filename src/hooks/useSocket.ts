@@ -2,26 +2,25 @@
 
 import { useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
-import { MINING_MODES, MINING_SOURCES, type MiningMode } from "@/store/miningMode";
+import { SOURCE_KEYS, MINING_SOURCES, type SourceKey } from "@/store/miningMode";
 
-type SourceMap = Record<MiningMode, any>;
+type SourceMap = Record<SourceKey, any>;
 
-const EMPTY: SourceMap = MINING_MODES.reduce(
-    (acc, m) => ({ ...acc, [m]: null }),
+const EMPTY: SourceMap = SOURCE_KEYS.reduce(
+    (acc, k) => ({ ...acc, [k]: null }),
     {} as SourceMap,
 );
 
 export function useSocket() {
     const [socket, setSocket] = useState<Socket | null>(null);
     const [isConnected, setIsConnected] = useState(false);
-    // One payload per mining source, keyed by mode. Each arrives on its own
-    // socket event (see MINING_SOURCES) and is null until that source is
+    // One payload per ckpool instance, keyed by SourceKey. Each arrives on its own
+    // socket event (see MINING_SOURCES) and stays null until that instance is
     // configured and reporting.
     const [sources, setSources] = useState<SourceMap>(EMPTY);
 
     useEffect(() => {
-        // `tsx server.ts` serves both Next.js and socket.io on the same port, so
-        // connect to the same origin.
+        // `tsx server.ts` serves both Next.js and socket.io on the same port.
         const socketInstance = io({
             path: "/socket.io",
             transports: ["websocket", "polling"],
@@ -38,15 +37,14 @@ export function useSocket() {
             setIsConnected(false);
         });
 
-        // Subscribe from the registry so a new source needs no change here.
-        for (const mode of MINING_MODES) {
-            socketInstance.on(MINING_SOURCES[mode].event, (data: any) => {
-                setSources((prev) => ({ ...prev, [mode]: data }));
+        // Subscribe from the registry, so a new instance needs no change here.
+        for (const key of SOURCE_KEYS) {
+            socketInstance.on(MINING_SOURCES[key].event, (data: any) => {
+                setSources((prev) => ({ ...prev, [key]: data }));
             });
         }
 
         setSocket(socketInstance);
-
         return () => {
             socketInstance.disconnect();
         };
@@ -56,10 +54,8 @@ export function useSocket() {
         socket,
         isConnected,
         sources,
-        // Named aliases, derived from the same map so they cannot drift from it.
+        // Named alias for the always-present primary solo payload, which several
+        // pages use as the "have we received anything at all yet" signal.
         stats: sources.solo,
-        poolStats: sources.pool,
-        rentalStats: sources.highdiff,
-        pool2Stats: sources.pool2,
     };
 }

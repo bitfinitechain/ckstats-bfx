@@ -1,50 +1,60 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
-import { Pickaxe, Network, Zap, Server } from "lucide-react";
+import { Pickaxe, Network, Zap, ServerOff } from "lucide-react";
 import {
     useMiningMode,
     MINING_MODES,
+    MINING_TIERS,
     MINING_SOURCES,
+    MODE_LABEL,
+    TIER_LABEL,
+    sourceKeyFor,
     type MiningMode,
+    type MiningTier,
+    type SourceKey,
 } from "@/store/miningMode";
 import { Card, CardContent } from "@/components/ui/card";
 
-/** Per-source icon. Labels and copy live in MINING_SOURCES; only the glyph is here. */
+/** Per-mode icon. Labels live in the store; only the glyph is here. */
 const ICONS: Record<MiningMode, any> = {
     solo: Pickaxe,
     pool: Network,
     highdiff: Zap,
-    pool2: Server,
 };
 
+const PILL = "relative isolate flex items-center justify-center gap-2 rounded-full outline-none " +
+    "transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-primary/50 active:scale-[0.98]";
+
 /**
- * Mining-source segmented control (solid-pill toggle). Shared across Dashboard,
- * Workers, Blocks and Payouts — the selection lives in the useMiningMode store,
- * so switching on one page carries over as you navigate. The active mode is a
- * filled primary pill that slides between positions; each tab shows its live
- * worker count, or "off" when that source isn't reporting.
+ * Mining selector: three mode tabs plus a Primary/Failover switch.
  *
- * Tabs are rendered from MINING_MODES, so adding a source adds a tab.
+ * A flat tab per instance does not fit — four tabs already take 78px each at
+ * 390px while "High-Diff" alone needs 86px. The grid also states something the
+ * flat list only implied: solo-2 is the failover FOR solo, not a fifth kind of
+ * mining. Selection lives in the useMiningMode store so it carries across pages.
  */
-export default function MiningTabs({ sources }: { sources: Record<MiningMode, any> }) {
-    const { mode, setMode } = useMiningMode();
+export default function MiningTabs({ sources }: { sources: Record<SourceKey, any> }) {
+    const { mode, tier, setMode, setTier } = useMiningMode();
     const reduce = useReducedMotion();
+    const spring = reduce ? { duration: 0 } : { type: "spring" as const, stiffness: 420, damping: 34 };
 
     return (
-        <div className="flex items-center">
+        <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:gap-3">
+            {/* Mode tabs */}
             <div
                 role="tablist"
-                aria-label="Mining source"
-                className="inline-grid grid-cols-4 gap-1.5 rounded-full border border-border bg-card p-1.5"
+                aria-label="Mining mode"
+                className="inline-grid grid-cols-3 gap-1.5 rounded-full border border-border bg-card p-1.5"
             >
                 {MINING_MODES.map((key) => {
-                    const src = MINING_SOURCES[key];
                     const Icon = ICONS[key];
-                    const data = sources[key];
+                    const sk = sourceKeyFor(key, tier);
+                    const data = sk ? sources[sk] : null;
                     const isActive = mode === key;
-                    const online = !!data;
-                    const workers = data?.global?.workers ?? 0;
+                    // "—" means we run no such instance at this tier; "off" means we
+                    // run one and it is not reporting. Those are different facts.
+                    const badge = sk === null ? "—" : data ? `${data?.global?.workers ?? 0}w` : "off";
 
                     return (
                         <button
@@ -52,7 +62,7 @@ export default function MiningTabs({ sources }: { sources: Record<MiningMode, an
                             role="tab"
                             aria-selected={isActive}
                             onClick={() => setMode(key)}
-                            className={`relative isolate flex items-center justify-center gap-2 rounded-full px-3 py-2 text-sm font-bold outline-none transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-primary/50 active:scale-[0.98] sm:px-5 ${
+                            className={`${PILL} px-3 py-2 text-sm font-bold sm:px-5 ${
                                 isActive ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground"
                             }`}
                         >
@@ -60,23 +70,49 @@ export default function MiningTabs({ sources }: { sources: Record<MiningMode, an
                                 <motion.span
                                     layoutId="miningTabIndicator"
                                     className="absolute inset-0 -z-10 rounded-full bg-primary shadow-lg shadow-primary/30"
-                                    transition={
-                                        reduce
-                                            ? { duration: 0 }
-                                            : { type: "spring", stiffness: 420, damping: 34 }
-                                    }
+                                    transition={spring}
                                 />
                             )}
-
                             <Icon size={16} aria-hidden="true" />
-                            <span>{src.label}</span>
+                            <span>{MODE_LABEL[key]}</span>
                             <span
                                 className={`font-mono text-[11px] font-semibold ${
                                     isActive ? "text-primary-foreground/80" : "text-muted-foreground/70"
                                 }`}
                             >
-                                {online ? `${workers}w` : "off"}
+                                {badge}
                             </span>
+                        </button>
+                    );
+                })}
+            </div>
+
+            {/* Primary / Failover switch */}
+            <div
+                role="radiogroup"
+                aria-label="Instance"
+                className="inline-grid grid-cols-2 gap-1.5 rounded-full border border-border bg-card p-1.5"
+            >
+                {MINING_TIERS.map((t) => {
+                    const isActive = tier === t;
+                    return (
+                        <button
+                            key={t}
+                            role="radio"
+                            aria-checked={isActive}
+                            onClick={() => setTier(t)}
+                            className={`${PILL} px-3 py-2 text-xs font-bold sm:px-4 ${
+                                isActive ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                            }`}
+                        >
+                            {isActive && (
+                                <motion.span
+                                    layoutId="miningTierIndicator"
+                                    className="absolute inset-0 -z-10 rounded-full bg-primary shadow-lg shadow-primary/30"
+                                    transition={spring}
+                                />
+                            )}
+                            <span>{TIER_LABEL[t]}</span>
                         </button>
                     );
                 })}
@@ -86,15 +122,44 @@ export default function MiningTabs({ sources }: { sources: Record<MiningMode, an
 }
 
 /**
- * Shown on any page when the selected source has no data yet. Copy comes from
- * MINING_SOURCES so each tab explains its own endpoint — previously this was
- * `mode === "highdiff" ? <HighDiffEmpty/> : <PoolEmpty/>` in four files, which
- * meant any unrecognised mode advertised the shared pool's stratum address.
+ * Shown when the selected instance has no data — or does not exist. Copy comes
+ * from MINING_SOURCES so each instance names its own endpoint; the null case is
+ * a distinct message, because "we do not run this" and "this is idle" are
+ * different facts and showing zeros for the first one would be a lie.
  */
-export function SourceEmpty({ mode }: { mode: MiningMode }) {
-    const src = MINING_SOURCES[mode];
+export function SourceEmpty({
+    sourceKey,
+    mode,
+    tier,
+}: {
+    sourceKey: SourceKey | null;
+    mode: MiningMode;
+    tier: MiningTier;
+}) {
+    if (sourceKey === null) {
+        return (
+            <Card>
+                <CardContent className="flex flex-col items-center justify-center gap-4 py-20 text-center">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-full border border-border bg-muted/40">
+                        <ServerOff size={26} className="text-muted-foreground" aria-hidden="true" />
+                    </div>
+                    <div className="space-y-1">
+                        <h3 className="text-lg font-bold text-foreground">
+                            No {TIER_LABEL[tier].toLowerCase()} instance for {MODE_LABEL[mode]}
+                        </h3>
+                        <p className="mx-auto max-w-md text-sm text-muted-foreground">
+                            We don&apos;t run a second {MODE_LABEL[mode]} instance. Switch to{" "}
+                            <span className="font-semibold text-foreground">Primary</span> to see this pool.
+                        </p>
+                    </div>
+                </CardContent>
+            </Card>
+        );
+    }
+
+    const src = MINING_SOURCES[sourceKey];
     const Icon = ICONS[mode];
-    if (!src?.empty) return null;
+    if (!src.empty) return null;
 
     return (
         <Card>
