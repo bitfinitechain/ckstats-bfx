@@ -29,6 +29,20 @@ export interface MiningSource {
     redisKey: string;
     /** Empty-state copy, shown when the tab is selected but the source has no data. */
     empty: { heading: string; blurb: string; stratum: string } | null;
+    /**
+     * True when this is a SHARED pool: the block coinbase pays the pool address and
+     * rewards are then split among contributors by share, so the finder does not keep
+     * the 50 BFX. False for solo-style sources, where the coinbase pays the finder.
+     *
+     * This drives real copy and the finder leaderboard, so it has to be a property of
+     * the source. The code previously tested `mode === "pool"`, which classified
+     * Pool-2 as solo and told miners the finder pockets the whole reward.
+     */
+    shared: boolean;
+    /** How the pool is described in prose, e.g. "the BitFinite <longName> pool". */
+    longName: string;
+    /** Empty-state line for this tab's workers list. */
+    emptyWorkers: string;
 }
 
 export const MINING_SOURCES: Record<MiningMode, MiningSource> = {
@@ -39,6 +53,9 @@ export const MINING_SOURCES: Record<MiningMode, MiningSource> = {
         redisKey: "latest_stats",
         // Solo is the always-configured source; the page shows a loader instead.
         empty: null,
+        shared: false,
+        longName: "solo",
+        emptyWorkers: "No active workers",
     },
     pool: {
         label: "Pool",
@@ -50,6 +67,9 @@ export const MINING_SOURCES: Record<MiningMode, MiningSource> = {
             blurb: "The shared pool hasn't reported yet. Point a miner at",
             stratum: "stratum+tcp://pool.bitfinitechain.org:3333",
         },
+        shared: true,
+        longName: "shared",
+        emptyWorkers: "No pool miners yet",
     },
     highdiff: {
         label: "High-Diff",
@@ -61,6 +81,9 @@ export const MINING_SOURCES: Record<MiningMode, MiningSource> = {
             blurb: "This is the high fixed-difficulty solo port for large ASICs & rented rigs. Point one at",
             stratum: "stratum+tcp://solo.bitfinitechain.org:3334",
         },
+        shared: false,
+        longName: "high-difficulty solo",
+        emptyWorkers: "No high-diff miners yet",
     },
     pool2: {
         // U+2011 non-breaking hyphen. At 390px four tabs each get 78px and the
@@ -77,6 +100,9 @@ export const MINING_SOURCES: Record<MiningMode, MiningSource> = {
                 "accounting and its own payouts — it is not a mirror of the Pool tab. Point a miner at",
             stratum: "stratum+tcp://pool-2.bitfinitechain.org:3335",
         },
+        shared: true,
+        longName: "failover shared",
+        emptyWorkers: "No Pool-2 miners yet",
     },
 };
 

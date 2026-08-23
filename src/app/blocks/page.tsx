@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSocket } from "@/hooks/useSocket";
-import { useMiningMode } from "@/store/miningMode";
+import { useMiningMode, MINING_SOURCES } from "@/store/miningMode";
 import MiningTabs, { SourceEmpty } from "@/components/MiningTabs";
 import { Card } from "@/components/ui/card";
 import { CardTitleRow, LivePill } from "@/components/CardTitleRow";
@@ -59,7 +59,7 @@ export default function BlocksPage() {
     // above, so a useMemo here would change the hook count between renders and crash
     // the page (Rules of Hooks). One pass over <=2000 blocks is cheap.
     const finders = (() => {
-        if (mode === "pool") return [] as { solver: string; count: number; bfx: number; last: number }[];
+        if (MINING_SOURCES[mode].shared) return [] as { solver: string; count: number; bfx: number; last: number }[];
         const by = new Map<string, { solver: string; count: number; bfx: number; last: number }>();
         for (const b of (blocks as any[]) ?? []) {
             if (!b?.solver) continue;
@@ -119,7 +119,7 @@ export default function BlocksPage() {
                             </p>
                         </Card>
                     )}
-                    {mode === "pool" && blocks.length > 0 && (
+                    {MINING_SOURCES[mode].shared && blocks.length > 0 && (
                         <p className="mb-6 text-xs text-muted-foreground">
                             No finder leaderboard on the shared pool: its coinbase pays the pool
                             address, then rewards are split by shares — so the individual finder

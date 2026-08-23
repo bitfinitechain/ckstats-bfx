@@ -136,7 +136,7 @@ export default function WorkersPage() {
                             ) : (
                                 <TableRow>
                                     <TableCell colSpan={4} className="px-5 py-12 text-center text-muted-foreground">
-                                        {activeOnly && idleCount > 0 ? "No miners currently connected — untick \u201cConnected only\u201d to see miners who have mined here before." : mode === "solo" ? "No active workers found." : mode === "pool" ? "No pool miners yet." : "No high-diff miners yet."}
+                                        {activeOnly && idleCount > 0 ? "No miners currently connected — untick \u201cConnected only\u201d to see miners who have mined here before." : `${MINING_SOURCES[mode].emptyWorkers}.`}
                                     </TableCell>
                                 </TableRow>
                             )}

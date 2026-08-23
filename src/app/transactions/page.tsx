@@ -1,7 +1,7 @@
 "use client";
 
 import { useSocket } from "@/hooks/useSocket";
-import { useMiningMode } from "@/store/miningMode";
+import { useMiningMode, MINING_SOURCES } from "@/store/miningMode";
 import MiningTabs, { SourceEmpty } from "@/components/MiningTabs";
 import { Card } from "@/components/ui/card";
 import { LivePill } from "@/components/CardTitleRow";
@@ -49,7 +49,7 @@ export default function PayoutsPage() {
     // The shared pool is PPLNS: each block's coinbase goes to the pool address and
     // is then split among all contributors by shares — the finder does NOT pocket
     // the full 50 BFX. Solo / high-diff are coinbase-to-finder (finder gets it all).
-    const isPool = mode === "pool";
+    const isPool = MINING_SOURCES[mode].shared;
 
     // Each row is a block this source solved; the payout is that block's coinbase reward.
     const now = Date.now();
@@ -88,7 +88,7 @@ export default function PayoutsPage() {
                             <p className="text-sm text-muted-foreground mt-2">
                                 {isPool ? (
                                     <>
-                                        Blocks solved on the BitFinite <span className="font-semibold text-foreground">shared</span> pool.
+                                        Blocks solved on the BitFinite <span className="font-semibold text-foreground">{MINING_SOURCES[mode].longName}</span> pool.
                                         Each block&rsquo;s <span className="font-semibold text-foreground">50 BFX</span> subsidy is paid to the
                                         pool and then distributed to <span className="font-semibold text-foreground">all contributors in
                                         proportion to their shares</span> — the finder shown below does not receive the full reward.
@@ -96,7 +96,7 @@ export default function PayoutsPage() {
                                 ) : (
                                     <>
                                         Coinbase rewards paid directly to miners who solved a block on the BitFinite{" "}
-                                        {mode === "solo" ? "solo" : "high-difficulty solo"} pool.
+                                        {MINING_SOURCES[mode].longName} pool.
                                         Each reward is the block subsidy — <span className="font-semibold text-foreground">50 BFX</span>,
                                         halving every 210,000 blocks.
                                     </>

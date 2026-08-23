@@ -110,7 +110,7 @@ function WorkersCard({ stats, isConnected, mode }: { stats: any; isConnected: bo
                         ))) : (
                         <TableRow>
                             <TableCell colSpan={4} className="px-5 py-12 text-center text-muted-foreground">
-                                {idleCount > 0 ? "No miners connected right now" : mode === "solo" ? "No active workers" : mode === "pool" ? "No pool miners yet" : "No high-diff miners yet"}
+                                {idleCount > 0 ? "No miners connected right now" : MINING_SOURCES[mode].emptyWorkers}
                             </TableCell>
                         </TableRow>
                     )}
