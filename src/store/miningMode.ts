@@ -63,7 +63,10 @@ export const MINING_SOURCES: Record<MiningMode, MiningSource> = {
         },
     },
     pool2: {
-        label: "Pool-2",
+        // U+2011 non-breaking hyphen. At 390px four tabs each get 78px and the
+        // label wraps; a plain hyphen broke this one as "Pool-" / "2". Measured:
+        // the label stays whole at 50px and the worker count wraps below instead.
+        label: "Pool\u20112",
         workersTitle: "Pool-2 Workers",
         event: "pool2Stats",
         redisKey: "latest_pool2_stats",
