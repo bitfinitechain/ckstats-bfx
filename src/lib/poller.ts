@@ -5,7 +5,7 @@ import { redis } from './redis';
 import { parseHashrate } from './utils';
 import { electrum, isValidAddress } from './electrum';
 
-// Two ckpool sources feed the dashboard's Solo / Pool tabs:
+// Four ckpool sources feed the dashboard's tabs:
 //  - SOLO: seed-1's ckpool running in -B (solo) mode.
 //  - POOL: seed-3's ckpool running in shared/pool mode.
 // Each source is just a ckpool logs directory containing users/, pool/pool.status
@@ -16,6 +16,14 @@ const POOL_LOGS_DIR = process.env.POOL_CKPOOL_LOGS_DIR || '';
 // High-diff solo instance (seed-1 port 3334, large/rented rigs). Optional — surfaced
 // as its own "High-Diff" tab, kept separate from organic small-miner solo (3333).
 const RENTAL_LOGS_DIR = process.env.RENTAL_CKPOOL_LOGS_DIR || '';
+// Second shared pool ("Pool-2") — a failover PPLNS instance on separate hardware,
+// rsynced here the same way POOL_LOGS_DIR is. It must stay a SEPARATE source, not
+// be merged into the Pool tab: it keeps its own ckpool share ledger and runs its
+// own payout script against its own wallet, so a combined figure would imply one
+// shared payout that does not exist. It also cannot share POOL_LOGS_DIR — that
+// rsync runs with --delete and both pools hold a users/<address> file for the
+// same miner, so one would overwrite the other. Optional; empty = tab shows "off".
+const POOL2_LOGS_DIR = process.env.POOL2_CKPOOL_LOGS_DIR || '';
 
 // ckpool keeps a per-user state file that survives across restarts AND across the
 // chain re-anchor, so miners from the previous (old-genesis) chain linger as "active
@@ -67,7 +75,10 @@ function workerHistFor(key: string): WorkerHistory {
 }
 
 export async function startPoller(io: Server) {
-    console.log(`Starting Poller — solo: ${SOLO_LOGS_DIR}${POOL_LOGS_DIR ? `, pool: ${POOL_LOGS_DIR}` : ' (pool source not configured)'}`);
+    console.log(`Starting Poller — solo: ${SOLO_LOGS_DIR}`
+        + `${POOL_LOGS_DIR ? `, pool: ${POOL_LOGS_DIR}` : ' (pool source not configured)'}`
+        + `${RENTAL_LOGS_DIR ? `, highdiff: ${RENTAL_LOGS_DIR}` : ''}`
+        + `${POOL2_LOGS_DIR ? `, pool2: ${POOL2_LOGS_DIR}` : ' (pool2 source not configured)'}`);
 
     // Ensure Electrum connection
     try {
@@ -115,6 +126,12 @@ async function poll(io: Server) {
         const r = collectSource(RENTAL_LOGS_DIR, 'rental', network);
         if (r.global.users > 0 || r.blocks.length > 0) rental = r;
     }
+    // Pool-2 (failover shared pool, port 3335) — same gating as the other optional sources.
+    let pool2 = null;
+    if (POOL2_LOGS_DIR) {
+        const p2 = collectSource(POOL2_LOGS_DIR, 'pool2', network);
+        if (p2.global.users > 0 || p2.blocks.length > 0) pool2 = p2;
+    }
 
     // Log the emit only when the numbers actually CHANGE. This fired on every
     // tick, and since the counts are stable for hours it wrote the identical line
@@ -124,7 +141,8 @@ async function poll(io: Server) {
     // Set STATS_LOG_EVERY_TICK=1 to restore the old firehose when debugging.
     const emitSummary = `solo: ${solo.global.users} users / ${solo.blocks.length} blocks`
         + (pool ? `, pool: ${pool.global.users} users / ${pool.blocks.length} blocks` : ', pool: n/a')
-        + (rental ? `, highdiff: ${rental.global.users} users / ${rental.blocks.length} blocks` : ', highdiff: n/a');
+        + (rental ? `, highdiff: ${rental.global.users} users / ${rental.blocks.length} blocks` : ', highdiff: n/a')
+        + (pool2 ? `, pool2: ${pool2.global.users} users / ${pool2.blocks.length} blocks` : ', pool2: n/a');
     if (process.env.STATS_LOG_EVERY_TICK === '1' || emitSummary !== lastEmitSummary) {
         console.log(`Emitting stats — ${emitSummary}`);
         lastEmitSummary = emitSummary;
@@ -133,11 +151,13 @@ async function poll(io: Server) {
     io.emit('stats', solo);          // solo payload (unchanged shape — other pages rely on it)
     io.emit('poolStats', pool);      // pool payload, or null when not configured / no data yet
     io.emit('rentalStats', rental);  // high-diff (3334) payload, or null when idle / not configured
+    io.emit('pool2Stats', pool2);    // failover shared pool (3335) payload, or null when idle / not configured
 
     try {
         await redis.set('latest_stats', JSON.stringify(solo));
         await redis.set('latest_pool_stats', JSON.stringify(pool));
         await redis.set('latest_rental_stats', JSON.stringify(rental));
+        await redis.set('latest_pool2_stats', JSON.stringify(pool2));
     } catch (e) {
         console.error("Redis save failed:", e);
     }
@@ -462,6 +482,7 @@ function refreshOneBalance() {
     const dirs = [path.join(SOLO_LOGS_DIR, 'users')];
     if (POOL_LOGS_DIR) dirs.push(path.join(POOL_LOGS_DIR, 'users'));
     if (RENTAL_LOGS_DIR) dirs.push(path.join(RENTAL_LOGS_DIR, 'users'));
+    if (POOL2_LOGS_DIR) dirs.push(path.join(POOL2_LOGS_DIR, 'users'));
 
     const files: string[] = [];
     for (const d of dirs) {

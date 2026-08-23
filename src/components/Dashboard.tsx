@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { useSocket } from "@/hooks/useSocket";
-import { useMiningMode, type MiningMode } from "@/store/miningMode";
+import { useMiningMode, MINING_SOURCES, type MiningMode } from "@/store/miningMode";
 import { formatHashrate, diffToNowDHM, obfuscateAddress } from "@/lib/utils";
 import Tiles from "@/components/Tiles";
-import MiningTabs, { PoolEmpty, HighDiffEmpty } from "@/components/MiningTabs";
+import MiningTabs, { SourceEmpty } from "@/components/MiningTabs";
 import MisoLoader from "@/components/MisoLoader";
 import PageHeading from "@/components/PageHeading";
 import { Card } from "@/components/ui/card";
@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/table";
 
 export default function Dashboard() {
-    const { isConnected, stats, poolStats, rentalStats } = useSocket();
+    const { isConnected, stats, sources } = useSocket();
     const { mode } = useMiningMode();
 
     // Initial connection — no data at all yet.
@@ -36,11 +36,11 @@ export default function Dashboard() {
         );
     }
 
-    const active = mode === "solo" ? stats : mode === "pool" ? poolStats : rentalStats;
+    const active = sources[mode];
 
     return (
         <div>
-            <PageHeading action={<MiningTabs solo={stats} pool={poolStats} highdiff={rentalStats} />}>
+            <PageHeading action={<MiningTabs sources={sources} />}>
                 Overview
             </PageHeading>
 
@@ -49,10 +49,8 @@ export default function Dashboard() {
                     <Tiles stats={active} />
                     <WorkersCard stats={active} isConnected={isConnected} mode={mode} />
                 </>
-            ) : mode === "highdiff" ? (
-                <HighDiffEmpty />
             ) : (
-                <PoolEmpty />
+                <SourceEmpty mode={mode} />
             )}
         </div>
     );
@@ -66,7 +64,7 @@ function WorkersCard({ stats, isConnected, mode }: { stats: any; isConnected: bo
     const allUsers = stats?.users ?? [];
     const users = allUsers.filter((u: any) => Number(u.workers || 0) > 0);
     const idleCount = allUsers.length - users.length;
-    const title = mode === "solo" ? "Solo Workers" : mode === "pool" ? "Pool Workers" : "High-Diff Workers";
+    const title = MINING_SOURCES[mode].workersTitle;
 
     return (
         <Card>

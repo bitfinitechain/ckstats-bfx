@@ -3,10 +3,10 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSocket } from "@/hooks/useSocket";
-import { useMiningMode } from "@/store/miningMode";
+import { useMiningMode, MINING_SOURCES } from "@/store/miningMode";
 import { formatHashrate, obfuscateAddress } from "@/lib/utils";
 import { WorkerSearch } from "@/components/WorkerSearch";
-import MiningTabs, { PoolEmpty, HighDiffEmpty } from "@/components/MiningTabs";
+import MiningTabs, { SourceEmpty } from "@/components/MiningTabs";
 import MisoLoader from "@/components/MisoLoader";
 import { Pagination } from "@/components/Pagination";
 import { Card } from "@/components/ui/card";
@@ -24,7 +24,7 @@ import {
 const PAGE_SIZES = [10, 25, 50, 100];
 
 export default function WorkersPage() {
-    const { isConnected, stats, poolStats, rentalStats } = useSocket();
+    const { isConnected, stats, sources } = useSocket();
     const { mode } = useMiningMode();
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(25);
@@ -45,7 +45,7 @@ export default function WorkersPage() {
         );
     }
 
-    const active = mode === "solo" ? stats : mode === "pool" ? poolStats : rentalStats;
+    const active = sources[mode];
     const allUsers = active?.users ?? [];
     // ckpool keeps a state file per miner forever, so most of this list is miners who
     // have gone away (86% of the solo list had 0 workers). Default to those actually
@@ -58,16 +58,16 @@ export default function WorkersPage() {
 
     return (
         <div>
-            <PageHeading action={<MiningTabs solo={stats} pool={poolStats} highdiff={rentalStats} />}>
+            <PageHeading action={<MiningTabs sources={sources} />}>
                 Workers
             </PageHeading>
 
             {!active ? (
-                mode === "highdiff" ? <HighDiffEmpty /> : <PoolEmpty />
+                <SourceEmpty mode={mode} />
             ) : (
                 <Card>
                     <CardTitleRow
-                        title={mode === "solo" ? "Solo Workers" : mode === "pool" ? "Pool Workers" : "High-Diff Workers"}
+                        title={MINING_SOURCES[mode].workersTitle}
                         right={
                             <div className="flex items-center gap-4">
                                 <WorkerSearch />

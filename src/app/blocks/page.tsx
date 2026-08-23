@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useSocket } from "@/hooks/useSocket";
 import { useMiningMode } from "@/store/miningMode";
-import MiningTabs, { PoolEmpty, HighDiffEmpty } from "@/components/MiningTabs";
+import MiningTabs, { SourceEmpty } from "@/components/MiningTabs";
 import { Card } from "@/components/ui/card";
 import { CardTitleRow, LivePill } from "@/components/CardTitleRow";
 import PageHeading from "@/components/PageHeading";
@@ -22,7 +22,7 @@ import { getBlockReward, formatBFX, obfuscateAddress } from "@/lib/utils";
 import React from 'react';
 
 export default function BlocksPage() {
-    const { isConnected, stats, poolStats, rentalStats } = useSocket();
+    const { isConnected, stats, sources } = useSocket();
     const { mode } = useMiningMode();
 
     const [currentPage, setCurrentPage] = React.useState(1);
@@ -43,7 +43,7 @@ export default function BlocksPage() {
         );
     }
 
-    const active = mode === "solo" ? stats : mode === "pool" ? poolStats : rentalStats;
+    const active = sources[mode];
     const blocks = active?.blocks ?? [];
 
     const totalPages = Math.ceil((blocks?.length || 0) / ITEMS_PER_PAGE);
@@ -74,12 +74,12 @@ export default function BlocksPage() {
 
     return (
         <div>
-            <PageHeading action={<MiningTabs solo={stats} pool={poolStats} highdiff={rentalStats} />}>
+            <PageHeading action={<MiningTabs sources={sources} />}>
                 Blocks
             </PageHeading>
 
             {!active ? (
-                mode === "highdiff" ? <HighDiffEmpty /> : <PoolEmpty />
+                <SourceEmpty mode={mode} />
             ) : (
                 <>
                     {finders.length > 0 && (

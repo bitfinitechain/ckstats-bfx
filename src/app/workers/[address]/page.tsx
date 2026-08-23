@@ -2,6 +2,7 @@
 
 import { use, useEffect, useState } from 'react';
 import { useSocket } from '@/hooks/useSocket';
+import { MINING_MODES } from '@/store/miningMode';
 import { hashrateSuffix, abbreviateNumber, diffToNowDHM, formatHashrate } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
 import { CardTitleRow } from '@/components/CardTitleRow';
@@ -28,7 +29,7 @@ export default function WorkerPage({ params }: { params: Promise<{ address: stri
     const { address } = use(params);
     const decodedAddress = decodeURIComponent(address);
 
-    const { stats, poolStats, rentalStats, isConnected } = useSocket();
+    const { stats, sources, isConnected } = useSocket();
     const [worker, setWorker] = useState<any>(null);
 
     useEffect(() => {
@@ -43,10 +44,10 @@ export default function WorkerPage({ params }: { params: Promise<{ address: stri
         // solo record after they move to the pool). Pick the source where they
         // are actually active — the most recent lastshare — so an idle,
         // 0-hashrate record doesn't mask the live one (and its worker list).
-        const candidates = [findIn(stats), findIn(poolStats), findIn(rentalStats)].filter(Boolean);
+        const candidates = MINING_MODES.map((m) => findIn(sources[m])).filter(Boolean);
         const match = candidates.sort((a: any, b: any) => (Number(b.lastshare) || 0) - (Number(a.lastshare) || 0))[0];
         if (match) setWorker(match);
-    }, [stats, poolStats, rentalStats, decodedAddress]);
+    }, [sources, decodedAddress]);
 
     if (!isConnected && !worker) {
         return (

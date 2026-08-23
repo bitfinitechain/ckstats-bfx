@@ -2,7 +2,7 @@
 
 import { useSocket } from "@/hooks/useSocket";
 import { useMiningMode } from "@/store/miningMode";
-import MiningTabs, { PoolEmpty, HighDiffEmpty } from "@/components/MiningTabs";
+import MiningTabs, { SourceEmpty } from "@/components/MiningTabs";
 import { Card } from "@/components/ui/card";
 import { LivePill } from "@/components/CardTitleRow";
 import PageHeading from "@/components/PageHeading";
@@ -23,7 +23,7 @@ import Link from "next/link";
 import React from 'react';
 
 export default function PayoutsPage() {
-    const { isConnected, stats, poolStats, rentalStats } = useSocket();
+    const { isConnected, stats, sources } = useSocket();
     const { mode } = useMiningMode();
 
     const [currentPage, setCurrentPage] = React.useState(1);
@@ -43,7 +43,7 @@ export default function PayoutsPage() {
         );
     }
 
-    const active = mode === "solo" ? stats : mode === "pool" ? poolStats : rentalStats;
+    const active = sources[mode];
     const blocks = active?.blocks ?? [];
 
     // The shared pool is PPLNS: each block's coinbase goes to the pool address and
@@ -62,12 +62,12 @@ export default function PayoutsPage() {
 
     return (
         <div>
-            <PageHeading action={<MiningTabs solo={stats} pool={poolStats} highdiff={rentalStats} />}>
+            <PageHeading action={<MiningTabs sources={sources} />}>
                 Payouts
             </PageHeading>
 
             {!active ? (
-                mode === "highdiff" ? <HighDiffEmpty /> : <PoolEmpty />
+                <SourceEmpty mode={mode} />
             ) : (
                 <>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mb-5">

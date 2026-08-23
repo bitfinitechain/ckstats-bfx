@@ -2,6 +2,7 @@
 
 import { use, useEffect, useState } from 'react';
 import { useSocket } from '@/hooks/useSocket';
+import { MINING_MODES } from '@/store/miningMode';
 import { hashrateSuffix, abbreviateNumber, diffToNowDHM, formatHashrate, getBlockReward, formatBFX } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
 import { CardTitleRow } from '@/components/CardTitleRow';
@@ -45,7 +46,7 @@ export default function IndividualWorkerPage({ params }: { params: Promise<{ add
     const decodedAddress = decodeURIComponent(address);
     const decodedWorkerName = decodeURIComponent(workerNameEncoded);
 
-    const { stats, poolStats, rentalStats, isConnected } = useSocket();
+    const { stats, sources, isConnected } = useSocket();
     const [user, setUser] = useState<any>(null);
     const [workerData, setWorkerData] = useState<any>(null);
     const [srcBlocks, setSrcBlocks] = useState<any[]>([]);
@@ -63,7 +64,7 @@ export default function IndividualWorkerPage({ params }: { params: Promise<{ add
         // Prefer the source that actually contains this worker (else the most
         // recently active one) so a stale solo record can't mask the live pool
         // record and hide the worker's stats.
-        const candidates = [stats, poolStats, rentalStats]
+        const candidates = MINING_MODES.map((m) => sources[m])
             .map((s: any) => ({ s, u: findIn(s) }))
             .filter((c: any) => c.u);
         candidates.sort((a: any, b: any) => {
@@ -80,7 +81,7 @@ export default function IndividualWorkerPage({ params }: { params: Promise<{ add
             }
             setSrcBlocks(best.s.blocks || []);
         }
-    }, [stats, poolStats, rentalStats, decodedAddress, decodedWorkerName]);
+    }, [sources, decodedAddress, decodedWorkerName]);
 
     const minerBlocks = srcBlocks.filter((b: any) => b.worker === decodedWorkerName) || [];
     const totalPages = Math.ceil(minerBlocks.length / ITEMS_PER_PAGE);
