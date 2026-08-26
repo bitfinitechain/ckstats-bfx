@@ -71,18 +71,18 @@ export default function Header() {
                         wrapper parked the links mid-bar with the toggle marooned at the
                         far right. One group, one auto margin -- which is how the explorer
                         does it, and what `justify-between` gave this header before. */}
-                {/* gap-x-5 at md, opening to 8 at lg. With shrink-0 on the wordmark the
-                    squeeze moved from the logo to the row: Geist needs 748px of nav in
-                    the 736px a 768px tablet gives. Five links fit at the tighter gap, so
-                    this keeps the full nav at tablet width instead of dropping to a
-                    hamburger the way the ten-link web nav has to. */}
-                <nav className="hidden md:flex items-center gap-x-5 lg:gap-x-8">
+                {/* gap-x-5 is the handoff's 20px, now at every width. The old
+                    gap-x-5 md / gap-x-8 lg split existed because the links were 18px
+                    bold and five of them wanted 748px of the 736px a 768px tablet
+                    gives. At 13px that row is far narrower, so the squeeze the
+                    responsive override worked around no longer happens. */}
+                <nav className="hidden md:flex items-center gap-x-5">
                     {navigation.map((item) => (
                         <Link
                             key={item.name}
                             href={item.href}
                             {...ext(item)}
-                            className={`text-lg font-bold transition-colors flex items-center gap-1 ${pathname === item.href
+                            className={`text-[13px] transition-colors flex items-center gap-1 ${pathname === item.href
                                 ? "text-primary"
                                 : "text-muted-foreground hover:text-primary"}`}
                         >

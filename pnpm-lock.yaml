@@ -21,8 +21,8 @@ importers:
   .:
     dependencies:
       '@bitfinitechain/brandkit':
-        specifier: github:bitfinitechain/Brandkit#v1.6.0
-        version: https://codeload.github.com/bitfinitechain/Brandkit/tar.gz/834a151a44bc5da03635731b6069c92406fa5500(@types/react@19.2.18)(lucide-react@0.562.0(react@19.2.3))(next-themes@0.4.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(next@16.2.12(@babel/core@7.29.7)(@types/node@20.19.43)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+        specifier: github:bitfinitechain/Brandkit#v1.9.0
+        version: https://codeload.github.com/bitfinitechain/Brandkit/tar.gz/0ffed3fba6db67373782e548f35fbf5ecc98548b(@types/react@19.2.18)(lucide-react@0.562.0(react@19.2.3))(next-themes@0.4.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(next@16.2.12(@babel/core@7.29.7)(@types/node@20.19.43)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -176,9 +176,9 @@ packages:
     resolution: {integrity: sha512-Vj1jF3cPfxg7OAfoI7QnVKLoILlm2JF9pnVHrX8qx7AHMiYWT+NDAA7jChlNgRS4WTLc/fD1lXLmPixluj+3Gg==}
     engines: {node: '>=6.9.0'}
 
-  '@bitfinitechain/brandkit@https://codeload.github.com/bitfinitechain/Brandkit/tar.gz/834a151a44bc5da03635731b6069c92406fa5500':
-    resolution: {gitHosted: true, tarball: https://codeload.github.com/bitfinitechain/Brandkit/tar.gz/834a151a44bc5da03635731b6069c92406fa5500}
-    version: 1.6.0
+  '@bitfinitechain/brandkit@https://codeload.github.com/bitfinitechain/Brandkit/tar.gz/0ffed3fba6db67373782e548f35fbf5ecc98548b':
+    resolution: {gitHosted: true, tarball: https://codeload.github.com/bitfinitechain/Brandkit/tar.gz/0ffed3fba6db67373782e548f35fbf5ecc98548b}
+    version: 1.9.0
     peerDependencies:
       lucide-react: '>=0.400.0'
       next: '>=15.0.0'
@@ -2701,7 +2701,7 @@ snapshots:
       '@babel/helper-string-parser': 7.29.7
       '@babel/helper-validator-identifier': 7.29.7
 
-  '@bitfinitechain/brandkit@https://codeload.github.com/bitfinitechain/Brandkit/tar.gz/834a151a44bc5da03635731b6069c92406fa5500(@types/react@19.2.18)(lucide-react@0.562.0(react@19.2.3))(next-themes@0.4.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(next@16.2.12(@babel/core@7.29.7)(@types/node@20.19.43)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
+  '@bitfinitechain/brandkit@https://codeload.github.com/bitfinitechain/Brandkit/tar.gz/0ffed3fba6db67373782e548f35fbf5ecc98548b(@types/react@19.2.18)(lucide-react@0.562.0(react@19.2.3))(next-themes@0.4.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(next@16.2.12(@babel/core@7.29.7)(@types/node@20.19.43)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
     dependencies:
       '@radix-ui/react-slot': 1.3.3(@types/react@19.2.18)(react@19.2.3)
       class-variance-authority: 0.7.1
