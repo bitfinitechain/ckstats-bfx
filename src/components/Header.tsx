@@ -71,7 +71,13 @@ export default function Header() {
                         wrapper parked the links mid-bar with the toggle marooned at the
                         far right. One group, one auto margin -- which is how the explorer
                         does it, and what `justify-between` gave this header before. */}
-                {/* gap-x-5 is the handoff's 20px, now at every width. The old
+                {/* Uppercase via CSS, not by rewriting the labels. Explorer spells its
+                    nav "BLOCKS"/"TRANSACTIONS" in the array itself, which renders the
+                    same but hands screen readers all-caps text — some read short
+                    all-caps words letter by letter. text-transform leaves the
+                    accessible name as "Dashboard" and only changes what is drawn.
+
+                    gap-x-5 is the handoff's 20px, now at every width. The old
                     gap-x-5 md / gap-x-8 lg split existed because the links were 18px
                     bold and five of them wanted 748px of the 736px a 768px tablet
                     gives. At 13px that row is far narrower, so the squeeze the
@@ -82,7 +88,7 @@ export default function Header() {
                             key={item.name}
                             href={item.href}
                             {...ext(item)}
-                            className={`text-[13px] transition-colors flex items-center gap-1 ${pathname === item.href
+                            className={`text-[13px] uppercase transition-colors flex items-center gap-1 ${pathname === item.href
                                 ? "text-primary"
                                 : "text-muted-foreground hover:text-primary"}`}
                         >
@@ -120,7 +126,7 @@ export default function Header() {
                                 href={item.href}
                                 {...ext(item)}
                                 onClick={() => setIsOpen(false)}
-                                className={`block text-base font-medium py-2 ${pathname === item.href
+                                className={`block text-[13px] uppercase py-2 ${pathname === item.href
                                     ? "text-primary bg-accent/50 rounded-md px-2"
                                     : "text-muted-foreground hover:text-primary px-2"}`}
                             >
