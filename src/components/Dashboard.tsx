@@ -64,8 +64,21 @@ function WorkersCard({ stats, isConnected, title, emptyLine }: { stats: any; isC
     // workers". This card is a summary, so it always shows connected miners only; the
     // full history + toggle lives on /workers.
     const allUsers = stats?.users ?? [];
-    const users = allUsers.filter((u: any) => Number(u.workers || 0) > 0);
-    const idleCount = allUsers.length - users.length;
+    const connected = allUsers.filter((u: any) => Number(u.workers || 0) > 0);
+    const idleCount = allUsers.length - connected.length;
+
+    // Summary cards get a fixed number of rows. This one rendered every connected
+    // miner, which looks fine at today's handful and turns the dashboard into an
+    // unbounded list the moment the pool grows — this page is meant to be a
+    // glance, and /workers is what pages through everything. Ranked by hashrate
+    // so the rows that survive the cut are the ones worth glancing at, rather
+    // than whatever order ckpool happened to send.
+    const TOP_N = 10;
+    const ranked = [...connected].sort(
+        (a: any, b: any) => Number(b.hashrate5m || 0) - Number(a.hashrate5m || 0),
+    );
+    const users = ranked.slice(0, TOP_N);
+    const hiddenCount = ranked.length - users.length;
 
     return (
         <Card>
@@ -112,6 +125,15 @@ function WorkersCard({ stats, isConnected, title, emptyLine }: { stats: any; isC
                         <TableRow>
                             <TableCell colSpan={4} className="px-5 py-12 text-center text-muted-foreground">
                                 {idleCount > 0 ? "No miners connected right now" : emptyLine}
+                            </TableCell>
+                        </TableRow>
+                    )}
+                    {hiddenCount > 0 && (
+                        <TableRow>
+                            <TableCell colSpan={4} className="text-center text-xs text-muted-foreground">
+                                <Link href="/workers" className="hover:text-primary">
+                                    Top {users.length} by hashrate — view all {ranked.length} connected miners
+                                </Link>
                             </TableCell>
                         </TableRow>
                     )}
