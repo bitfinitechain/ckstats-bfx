@@ -422,44 +422,134 @@ function collectSource(logsDir: string, key: string, network: { difficulty: numb
 }
 
 // Read solved blocks (last ~24h) from a ckpool.log, newest first, resolving txids via cache.
-function readBlocks(ckpoolLog: string): any[] {
+// Read solved blocks from a ckpool.log, newest first, resolving txids via cache.
+//
+// THIS USED TO READ A FIXED 5MB TAIL, sized when the logs were quiet and
+// commented "5MB covers >24h at 5m blocks". It stopped being true: solo's
+// ckpool.log reached 993MB of per-share lines, so 5MB covered minutes and the
+// payouts page rendered ONE row against 21,374 solved blocks in the file. The
+// pool log was worse, 0 of 1,207. A bigger constant only moves the cliff, so
+// the size of the log must not decide how much history the page gets.
+//
+// Instead: scan backwards ONCE per file until enough blocks are collected, then
+// read only the bytes appended since the last poll. The poller ticks every 2s,
+// so re-reading ~93MB to find 2000 solves each time is not an option.
+const MAX_BLOCKS = 2000;
+const BACKFILL_CHUNK = 8 * 1024 * 1024;
+// Bounds the one-off cost on a log that is mostly not solve lines. At solo's
+// density (~46KB per solve) this reaches roughly 5,500 blocks before stopping.
+const BACKFILL_MAX_BYTES = 256 * 1024 * 1024;
+
+const SOLVED_RE = /^\[(.*?)\] Solved and confirmed block (\d+) by (.*)$/;
+
+interface SolvedBlock {
+    timestamp: string;
+    height: number;
+    solver: string;
+    worker: string;
+    time: number;
+    txid: string | undefined;
+    receiver: string | undefined;
+}
+
+// Per-file scan position and the blocks found so far, newest first.
+const blockScan = new Map<string, { offset: number; blocks: SolvedBlock[] }>();
+
+function parseSolved(text: string): SolvedBlock[] {
+    const out: SolvedBlock[] = [];
+    for (const line of text.split('\n')) {
+        const m = line.match(SOLVED_RE);
+        if (!m) continue;
+        const fullSolver = m[3];
+        out.push({
+            timestamp: m[1],
+            height: parseInt(m[2]),
+            solver: fullSolver.split('.')[0],
+            worker: fullSolver,
+            time: new Date(m[1]).getTime(),
+            txid: undefined,
+            receiver: undefined,
+        });
+    }
+    return out;
+}
+
+// DEDUPE BY HEIGHT: ckpool re-logs "Solved and confirmed block N" on restarts
+// and re-confirmations, so the raw log repeats heights (block 186 appeared 46x,
+// block 116 37x). Without this the list shows the same block many times and any
+// per-miner aggregate is inflated. Input must be newest first; the newest line
+// for a height wins.
+function dedupeByHeight(newestFirst: SolvedBlock[]): SolvedBlock[] {
+    const seen = new Set<number>();
+    const out: SolvedBlock[] = [];
+    for (const b of newestFirst) {
+        if (seen.has(b.height)) continue;
+        seen.add(b.height);
+        out.push(b);
+        if (out.length >= MAX_BLOCKS) break;
+    }
+    return out;
+}
+
+// Walk backwards from EOF until MAX_BLOCKS distinct heights are found, the byte
+// cap is hit, or the file starts. Returns blocks newest first.
+function backfillBlocks(fd: number, size: number): SolvedBlock[] {
+    let end = size;
+    let read = 0;
+    let found: SolvedBlock[] = [];
+    while (end > 0 && read < BACKFILL_MAX_BYTES) {
+        const start = Math.max(0, end - BACKFILL_CHUNK);
+        const buf = Buffer.alloc(end - start);
+        fs.readSync(fd, buf, 0, buf.length, start);
+        read += buf.length;
+        let text = buf.toString('utf-8');
+        // A chunk that does not begin at BOF starts mid-line; drop that fragment
+        // so a truncated timestamp is never parsed as a real one.
+        if (start > 0) {
+            const nl = text.indexOf('\n');
+            text = nl === -1 ? '' : text.slice(nl + 1);
+        }
+        // Chunks are walked newest to oldest, so this chunk's blocks are OLDER
+        // than everything already collected and must go AFTER them. Prepending
+        // instead puts the oldest chunk first and dedupe then keeps the OLDEST
+        // line for a repeated height, which is the opposite of what is wanted.
+        found = found.concat(parseSolved(text).reverse());
+        if (dedupeByHeight(found).length >= MAX_BLOCKS) break;
+        end = start;
+    }
+    return dedupeByHeight(found);
+}
+
+function readBlocks(ckpoolLog: string): SolvedBlock[] {
     if (!fs.existsSync(ckpoolLog)) return [];
+    let fd: number | undefined;
     try {
         const size = fs.statSync(ckpoolLog).size;
-        const bufferSize = 5 * 1024 * 1024; // 5MB covers >24h at 5m blocks
-        const start = Math.max(0, size - bufferSize);
-        const buffer = Buffer.alloc(size - start);
-        const fd = fs.openSync(ckpoolLog, 'r');
-        fs.readSync(fd, buffer, 0, buffer.length, start);
-        fs.closeSync(fd);
+        let state = blockScan.get(ckpoolLog);
+        fd = fs.openSync(ckpoolLog, 'r');
 
-        const solvedRegex = /^\[(.*?)\] Solved and confirmed block (\d+) by (.*)$/;
-        const seenHeights = new Set<number>();
-        const blocks = buffer.toString('utf-8').split('\n')
-            .map(line => line.match(solvedRegex))
-            .filter(match => match !== null)
-            .map(match => {
-                const fullSolver = match![3];
-                return {
-                    timestamp: match![1],
-                    height: parseInt(match![2]),
-                    solver: fullSolver.split('.')[0],
-                    worker: fullSolver,
-                    time: new Date(match![1]).getTime(),
-                    txid: undefined as string | undefined,
-                    receiver: undefined as string | undefined,
-                };
-            })
-            .reverse()
-            // DEDUPE BY HEIGHT: ckpool re-logs "Solved and confirmed block N" on
-            // restarts/re-confirmations, so the raw log repeats heights (block 186
-            // appeared 46x, block 116 37x — ~13k lines for 9,178 distinct heights).
-            // Without this the block list shows the same block many times and any
-            // per-miner aggregate is inflated. Reversed first, so we keep the most
-            // recent line for each height.
-            .filter((b, _i, _a) => { const h = b.height; if (seenHeights.has(h)) return false; seenHeights.add(h); return true; })
-            .slice(0, 2000);
+        // Rotation or truncation: the file shrank, so the stored offset points
+        // past the end and every byte after it is new content, not old content.
+        if (state && size < state.offset) state = undefined;
 
+        if (!state) {
+            state = { offset: size, blocks: backfillBlocks(fd, size) };
+            blockScan.set(ckpoolLog, state);
+        } else if (size > state.offset) {
+            const buf = Buffer.alloc(size - state.offset);
+            fs.readSync(fd, buf, 0, buf.length, state.offset);
+            const text = buf.toString('utf-8');
+            // Stop at the last newline: the tail of a live log is usually a
+            // half-written line, and consuming it would both mis-parse it and
+            // skip it when the rest arrives.
+            const cut = text.lastIndexOf('\n');
+            if (cut !== -1) {
+                state.blocks = dedupeByHeight(parseSolved(text.slice(0, cut)).reverse().concat(state.blocks));
+                state.offset += Buffer.byteLength(text.slice(0, cut + 1), 'utf-8');
+            }
+        }
+
+        const blocks = state.blocks;
         fetchMissingCoinbase(blocks);
         for (const block of blocks) {
             block.txid = txidCache.get(block.height);
@@ -469,6 +559,8 @@ function readBlocks(ckpoolLog: string): any[] {
     } catch (e) {
         console.error("Error reading ckpool log:", e);
         return [];
+    } finally {
+        if (fd !== undefined) fs.closeSync(fd);
     }
 }
 
