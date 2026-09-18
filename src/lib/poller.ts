@@ -327,8 +327,9 @@ function collectSource(logsDir: string, key: string, network: { difficulty: numb
         } catch (e) { }
     }
 
-    // --- Solved blocks from this source's ckpool.log ---
-    const blocks = readBlocks(path.join(logsDir, 'ckpool.log'));
+    // --- Solved blocks from this source's ckpool log (name varies, see resolveCkpoolLog) ---
+    const resolvedLog = resolveCkpoolLog(logsDir);
+    const blocks = resolvedLog ? readBlocks(resolvedLog) : [];
 
     // --- Runtime (uptime) from this source's pool.status ---
     const poolStatusFile = path.join(logsDir, 'pool', 'pool.status');
@@ -421,7 +422,6 @@ function collectSource(logsDir: string, key: string, network: { difficulty: numb
     };
 }
 
-// Read solved blocks (last ~24h) from a ckpool.log, newest first, resolving txids via cache.
 // Read solved blocks from a ckpool.log, newest first, resolving txids via cache.
 //
 // THIS USED TO READ A FIXED 5MB TAIL, sized when the logs were quiet and
@@ -518,6 +518,50 @@ function backfillBlocks(fd: number, size: number): SolvedBlock[] {
         end = start;
     }
     return dedupeByHeight(found);
+}
+
+// ckpool names its log after the INSTANCE, not "ckpool": ckpool.c builds it as
+// `<logdir>/<name>.log` where name comes from -n. So the three failover
+// instances on the other box write bfx-pool-solo.log, bfx-pool-shared.log and
+// bfx-pool-highdiff.log, and this poller was looking only for ckpool.log. Their
+// Payouts tabs were empty while 33MB of solved-block history sat in the same
+// directory under a different name.
+//
+// A symlink is NOT a fix for those three: their directories arrive by
+// `rsync --delete` every minute, which removes anything the sender does not
+// have. (The local rental instance gets away with a ckpool.log symlink precisely
+// because nothing rsyncs over it.)
+//
+// Resolution order: ckpool.log if present, so existing sources and that symlink
+// keep working unchanged; otherwise the most recently modified top-level *.log,
+// which is the instance actively being written. Cached per directory, because
+// these directories hold thousands of entries and the poller ticks every 2s.
+const ckpoolLogPath = new Map<string, string | null>();
+
+function resolveCkpoolLog(logsDir: string): string | null {
+    const cached = ckpoolLogPath.get(logsDir);
+    if (cached !== undefined && cached !== null && fs.existsSync(cached)) return cached;
+
+    let resolved: string | null = null;
+    const preferred = path.join(logsDir, 'ckpool.log');
+    if (fs.existsSync(preferred)) {
+        resolved = preferred;
+    } else {
+        try {
+            const candidates = fs.readdirSync(logsDir, { withFileTypes: true })
+                .filter(e => e.isFile() && e.name.endsWith('.log'))
+                .map(e => {
+                    const full = path.join(logsDir, e.name);
+                    return { full, mtime: fs.statSync(full).mtimeMs };
+                })
+                .sort((a, b) => b.mtime - a.mtime);
+            resolved = candidates.length > 0 ? candidates[0].full : null;
+        } catch {
+            resolved = null;
+        }
+    }
+    ckpoolLogPath.set(logsDir, resolved);
+    return resolved;
 }
 
 function readBlocks(ckpoolLog: string): SolvedBlock[] {
