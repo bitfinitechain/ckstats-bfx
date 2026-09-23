@@ -88,6 +88,34 @@
   --bfx-danger-dark:   #f87171;   /*  6.40:1 */
   --bfx-danger-light:  #c92a2a;   /*  5.46:1 / 4.96:1 */
 
+  /* ---- categorical chart series ------------------------------------------
+     SEPARATE FROM STATUS ON PURPOSE. Charts used to borrow success and warning
+     as series colours, which painted a hardware brand green and the next one
+     amber: the reader takes those as "good" and "caution" before reading the
+     legend. Status stays reserved for status; these carry identity only.
+
+     Not chosen by eye. Every stop is inside the OKLCH lightness band for its
+     mode (dark 0.48-0.67, light 0.43-0.77), clears the 0.10 chroma floor, and
+     clears 3:1 against its surface. Worst adjacent CVD separation is dE 8.3
+     dark and 11.3 light, both above the 8 target, checked for protanopia,
+     deuteranopia and tritanopia. Re-run the check before changing any of them:
+     a stop that looks better in isolation routinely collapses a CVD pair.
+
+     Assign in order and never cycle: a ninth series folds into "other". */
+  --bfx-chart-1-dark: #5379df;   /* blue   */
+  --bfx-chart-2-dark: #00ab7a;   /* green  */
+  --bfx-chart-3-dark: #cd8134;   /* amber  */
+  --bfx-chart-4-dark: #8d6cc2;   /* violet */
+  --bfx-chart-1-light: #1d60bc;
+  --bfx-chart-2-light: #10a47a;
+  --bfx-chart-3-light: #c57800;
+  --bfx-chart-4-light: #6f4fa1;
+  /* The bucket that is NOT a finding: unrecognised, unnamed, other. Achromatic
+     by intent, so it fails a categorical chroma floor and should: it must not
+     read as one of the series above. */
+  --bfx-chart-other-dark:  #71717a;
+  --bfx-chart-other-light: #a1a1aa;
+
   /* ---- type scale ---------------------------------------------------------
      Added 2026-08-18 after measuring what the platform actually uses: 27
      distinct font sizes across 587 declarations. Seven of them were half-pixel
