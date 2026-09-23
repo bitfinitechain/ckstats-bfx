@@ -32,7 +32,7 @@ export default function StatTile({
                     {dot && <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
                     {label}
                 </div>
-                {icon && <span className="text-primary shrink-0">{icon}</span>}
+                {icon && <span className="text-primary-ink shrink-0">{icon}</span>}
             </div>
 
             {value != null && (

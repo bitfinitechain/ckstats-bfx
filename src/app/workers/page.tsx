@@ -126,7 +126,7 @@ export default function WorkersPage() {
                                             the shortened form, and the tail is what tells two miners
                                             apart. The table scrolls, so the column can have its width. */}
                                         <TableCell className="font-mono whitespace-nowrap" title="View this miner's workers">
-                                            <Link href={`/workers/${u.address}`} className="text-primary hover:underline">
+                                            <Link href={`/workers/${u.address}`} className="text-primary-ink hover:underline">
                                                 {obfuscateAddress(u.address)}
                                             </Link>
                                         </TableCell>

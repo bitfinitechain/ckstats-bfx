@@ -41,12 +41,12 @@ export default function Footer() {
                     </p>
                     <div className="flex flex-col space-y-2 text-sm text-muted-foreground">
                         <a href="https://bitfinitechain.org" target="_blank" rel="noopener noreferrer"
-                           className="flex items-center hover:text-primary transition-colors">
+                           className="flex items-center hover:text-primary-ink transition-colors">
                             <Globe className="w-4 h-4 mr-2" />
                             bitfinitechain.org
                         </a>
                         <a href="mailto:bitfinitechain@proton.me"
-                           className="flex items-center hover:text-primary transition-colors">
+                           className="flex items-center hover:text-primary-ink transition-colors">
                             <Mail className="w-4 h-4 mr-2" />
                             bitfinitechain@proton.me
                         </a>

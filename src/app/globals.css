@@ -33,8 +33,16 @@
   --popover: var(--card);
   --popover-foreground: var(--card-foreground);
 
-  /* BitFinite Brand Blue */
+  /* BitFinite Brand Blue. TWO STOPS, NOT ONE.
+     Brandkit/tokens/tokens.css explains why at length. --primary is the FILL
+     stop, a solid that a white label sits on. --primary-ink is the TEXT stop,
+     for accent type and for a thin fill that has to read against a surface.
+     Using the fill stop as ink is what that file calls the drift: on dark it
+     measures 2.94:1 on the page and 2.62:1 on a card, both failing 4.5:1,
+     where the ink stop gives 5.26:1 and 4.68:1. In light the two coincide,
+     which is fine. One hex, two roles, stated rather than assumed. */
   --primary: var(--bfx-blue-700);
+  --primary-ink: var(--bfx-blue-700);
   --primary-foreground: #ffffff;
 
   --secondary: var(--bfx-zinc-100);
@@ -78,6 +86,7 @@
 
   /* BitFinite Brand Blue */
   --primary: var(--bfx-blue-600);
+  --primary-ink: var(--bfx-blue-500);
   --primary-foreground: #ffffff;
 
   --secondary: var(--bfx-zinc-800);
@@ -108,6 +117,7 @@
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-primary: var(--primary);
+  --color-primary-ink: var(--primary-ink);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);

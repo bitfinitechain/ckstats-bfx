@@ -62,7 +62,7 @@ export default function WorkerPage({ params }: { params: Promise<{ address: stri
         if (stats) {
             return (
                 <div>
-                    <Link href="/workers" className="inline-flex items-center text-sm text-muted-foreground hover:text-primary mb-6 transition-colors">
+                    <Link href="/workers" className="inline-flex items-center text-sm text-muted-foreground hover:text-primary-ink mb-6 transition-colors">
                         <ArrowLeft className="w-4 h-4 mr-2" />
                         Back to Workers
                     </Link>
@@ -83,7 +83,7 @@ export default function WorkerPage({ params }: { params: Promise<{ address: stri
 
     return (
         <div>
-            <Link href="/workers" className="inline-flex items-center text-sm text-muted-foreground hover:text-primary mb-4 transition-colors">
+            <Link href="/workers" className="inline-flex items-center text-sm text-muted-foreground hover:text-primary-ink mb-4 transition-colors">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to Workers
             </Link>
@@ -206,7 +206,7 @@ export default function WorkerPage({ params }: { params: Promise<{ address: stri
                                 { n: '3', t: 'Auto-distributed', s: 'hourly, by your share of work, minus a 1% fee' },
                             ].map((step) => (
                                 <div key={step.n} className="flex gap-2.5">
-                                    <span className="shrink-0 w-5 h-5 rounded-full bg-primary/15 text-primary text-[11px] font-bold flex items-center justify-center">{step.n}</span>
+                                    <span className="shrink-0 w-5 h-5 rounded-full bg-primary/15 text-primary-ink text-[11px] font-bold flex items-center justify-center">{step.n}</span>
                                     <div className="min-w-0">
                                         <div className="text-[12px] font-medium text-foreground">{step.t}</div>
                                         <div className="text-[11px] text-muted-foreground leading-snug">{step.s}</div>
@@ -241,7 +241,7 @@ export default function WorkerPage({ params }: { params: Promise<{ address: stri
                                 return (
                                     <TableRow key={w.workername}>
                                         <TableCell className="font-mono">
-                                            <Link href={`/workers/${address}/${encodedWorker}`} className="flex items-center gap-2 text-primary hover:underline">
+                                            <Link href={`/workers/${address}/${encodedWorker}`} className="flex items-center gap-2 text-primary-ink hover:underline">
                                                 {shortName}
                                             </Link>
                                         </TableCell>

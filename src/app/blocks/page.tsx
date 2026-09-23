@@ -105,7 +105,7 @@ export default function BlocksPage() {
                                         <TableRow key={f.solver}>
                                             <TableCell className="font-mono tabular-nums text-muted-foreground">{i + 1}</TableCell>
                                             <TableCell className="font-mono" title="View this miner's workers">
-                                                <Link href={`/workers/${f.solver}`} className="hover:underline text-primary">
+                                                <Link href={`/workers/${f.solver}`} className="hover:underline text-primary-ink">
                                                     {obfuscateAddress(f.solver)}
                                                 </Link>
                                             </TableCell>
@@ -146,10 +146,10 @@ export default function BlocksPage() {
                                     paginatedBlocks.map((block: any, i: number) => (
                                         <TableRow key={i}>
                                             <TableCell className="font-mono font-bold whitespace-nowrap">
-                                                <a href={`https://explorer.bitfinitechain.org/block/${block.height}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline" title="View block on the explorer">#{block.height}</a>
+                                                <a href={`https://explorer.bitfinitechain.org/block/${block.height}`} target="_blank" rel="noopener noreferrer" className="text-primary-ink hover:underline" title="View block on the explorer">#{block.height}</a>
                                             </TableCell>
                                             <TableCell className="font-mono" title="View this miner's workers">
-                                                <Link href={`/workers/${block.solver}`} className="hover:underline text-primary">
+                                                <Link href={`/workers/${block.solver}`} className="hover:underline text-primary-ink">
                                                     {obfuscateAddress(block.solver)}
                                                 </Link>
                                             </TableCell>

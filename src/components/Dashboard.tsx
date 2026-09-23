@@ -87,7 +87,7 @@ function WorkersCard({ stats, isConnected, title, emptyLine }: { stats: any; isC
                 right={
                     <span className="flex items-center gap-3">
                         {idleCount > 0 && (
-                            <Link href="/workers" className="text-xs text-muted-foreground hover:text-primary">
+                            <Link href="/workers" className="text-xs text-muted-foreground hover:text-primary-ink">
                                 {idleCount} idle hidden
                             </Link>
                         )}
@@ -109,7 +109,7 @@ function WorkersCard({ stats, isConnected, title, emptyLine }: { stats: any; isC
                         users.map((u: any) => (
                             <TableRow key={u.address}>
                                 <TableCell className="font-mono truncate max-w-[160px] sm:max-w-[200px] md:max-w-none" title="View this miner's workers">
-                                    <Link href={`/workers/${u.address}`} className="text-primary hover:underline">
+                                    <Link href={`/workers/${u.address}`} className="text-primary-ink hover:underline">
                                         {obfuscateAddress(u.address)}
                                     </Link>
                                 </TableCell>
@@ -131,7 +131,7 @@ function WorkersCard({ stats, isConnected, title, emptyLine }: { stats: any; isC
                     {hiddenCount > 0 && (
                         <TableRow>
                             <TableCell colSpan={4} className="text-center text-xs text-muted-foreground">
-                                <Link href="/workers" className="hover:text-primary">
+                                <Link href="/workers" className="hover:text-primary-ink">
                                     Top {users.length} by hashrate — view all {ranked.length} connected miners
                                 </Link>
                             </TableCell>

@@ -165,7 +165,7 @@ export function SourceEmpty({
         <Card>
             <CardContent className="flex flex-col items-center justify-center gap-4 py-20 text-center">
                 <div className="flex h-14 w-14 items-center justify-center rounded-full border border-primary/30 bg-primary/10">
-                    <Icon size={26} className="text-primary" aria-hidden="true" />
+                    <Icon size={26} className="text-primary-ink" aria-hidden="true" />
                 </div>
                 <div className="space-y-1">
                     <h3 className="text-lg font-bold text-foreground">{src.empty.heading}</h3>

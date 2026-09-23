@@ -29,7 +29,7 @@ const qualifier = (t: string) => (
 function NotFound({ backHref, backLabel, title, body }: { backHref: string; backLabel: string; title: string; body: React.ReactNode }) {
     return (
         <div>
-            <Link href={backHref} className="inline-flex items-center text-sm text-muted-foreground hover:text-primary mb-6 transition-colors">
+            <Link href={backHref} className="inline-flex items-center text-sm text-muted-foreground hover:text-primary-ink mb-6 transition-colors">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 {backLabel}
             </Link>
@@ -116,7 +116,7 @@ export default function IndividualWorkerPage({ params }: { params: Promise<{ add
 
     return (
         <div>
-            <Link href={`/workers/${address}`} className="inline-flex items-center text-sm text-muted-foreground hover:text-primary mb-4 transition-colors">
+            <Link href={`/workers/${address}`} className="inline-flex items-center text-sm text-muted-foreground hover:text-primary-ink mb-4 transition-colors">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to User
             </Link>
@@ -185,7 +185,7 @@ export default function IndividualWorkerPage({ params }: { params: Promise<{ add
                                 <TableRow key={i}>
                                     <TableCell className="font-mono tabular-nums text-muted-foreground whitespace-nowrap">{new Date(block.time).toLocaleString()}</TableCell>
                                     <TableCell className="font-mono">
-                                        <a href={`https://explorer.bitfinitechain.org/${block.txid ? 'tx/' + block.txid : 'block/' + block.height}`} target="_blank" rel="noopener noreferrer" className="hover:underline text-primary">
+                                        <a href={`https://explorer.bitfinitechain.org/${block.txid ? 'tx/' + block.txid : 'block/' + block.height}`} target="_blank" rel="noopener noreferrer" className="hover:underline text-primary-ink">
                                             #{block.height}
                                         </a>
                                     </TableCell>

@@ -130,7 +130,7 @@ export default function PayoutsPage() {
                                                 <TableCell className="font-mono tabular-nums text-muted-foreground whitespace-nowrap">{new Date(block.time).toLocaleString()}</TableCell>
                                                 <TableCell className="font-mono" title={receiver || undefined}>
                                                     {receiver ? (
-                                                        <a href={`https://explorer.bitfinitechain.org/address/${receiver}`} target="_blank" rel="noopener noreferrer" className="hover:underline text-primary">
+                                                        <a href={`https://explorer.bitfinitechain.org/address/${receiver}`} target="_blank" rel="noopener noreferrer" className="hover:underline text-primary-ink">
                                                             {obfuscateAddress(receiver)}
                                                         </a>
                                                     ) : (
@@ -146,7 +146,7 @@ export default function PayoutsPage() {
                                                     </TableCell>
                                                 )}
                                                 <TableCell className="hidden md:table-cell text-right">
-                                                    <a href={href} target="_blank" rel="noopener noreferrer" className="hover:underline text-primary text-sm">
+                                                    <a href={href} target="_blank" rel="noopener noreferrer" className="hover:underline text-primary-ink text-sm">
                                                         {block.txid ? `View transaction` : `Height ${block.height} (coinbase)`}
                                                     </a>
                                                 </TableCell>

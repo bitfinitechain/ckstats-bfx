@@ -89,8 +89,8 @@ export default function Header() {
                             href={item.href}
                             {...ext(item)}
                             className={`text-[13px] uppercase transition-colors flex items-center gap-1 ${pathname === item.href
-                                ? "text-primary"
-                                : "text-muted-foreground hover:text-primary"}`}
+                                ? "text-primary-ink"
+                                : "text-muted-foreground hover:text-primary-ink"}`}
                         >
                             {item.name}
                             {item.external && (
@@ -127,8 +127,8 @@ export default function Header() {
                                 {...ext(item)}
                                 onClick={() => setIsOpen(false)}
                                 className={`block text-[13px] uppercase py-2 ${pathname === item.href
-                                    ? "text-primary bg-accent/50 rounded-md px-2"
-                                    : "text-muted-foreground hover:text-primary px-2"}`}
+                                    ? "text-primary-ink bg-accent/50 rounded-md px-2"
+                                    : "text-muted-foreground hover:text-primary-ink px-2"}`}
                             >
                                 {item.name}
                             </Link>

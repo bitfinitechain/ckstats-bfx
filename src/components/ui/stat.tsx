@@ -34,7 +34,7 @@ const valueTone = cva('font-mono font-bold leading-tight tabular-nums', {
     variants: {
         tone: {
             default: 'text-foreground',
-            accent: 'text-primary',
+            accent: 'text-primary-ink',
             muted: 'text-muted-foreground',
             ok: 'text-success',
             // Present because their absence was a bug. A tile that cannot say
@@ -53,7 +53,7 @@ export type StatTone = NonNullable<VariantProps<typeof valueTone>['tone']>;
 // lookup rather than a second cva — deriving it by stripping classes out of
 // valueTone's output worked until someone added a class to valueTone.
 const toneText: Record<StatTone, string> = {
-    default: 'text-foreground', accent: 'text-primary', muted: 'text-muted-foreground',
+    default: 'text-foreground', accent: 'text-primary-ink', muted: 'text-muted-foreground',
     ok: 'text-success', warn: 'text-warning', bad: 'text-destructive',
 };
 
