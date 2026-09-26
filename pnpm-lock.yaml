@@ -21,8 +21,8 @@ importers:
   .:
     dependencies:
       '@bitfinitechain/brandkit':
-        specifier: github:bitfinitechain/Brandkit#v1.15.0
-        version: https://codeload.github.com/bitfinitechain/Brandkit/tar.gz/95018b210ff3ec016ede1e3b2f798719e442e0c0(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(lucide-react@0.562.0(react@19.2.3))(next-themes@0.4.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(next@16.2.12(@babel/core@7.29.7)(@types/node@20.19.43)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(recharts@3.10.1(@types/react@19.2.18)(react-dom@19.2.3(react@19.2.3))(react-is@16.13.1)(react@19.2.3)(redux@5.0.1))
+        specifier: github:bitfinitechain/Brandkit#v1.16.0
+        version: https://codeload.github.com/bitfinitechain/Brandkit/tar.gz/07c1d007b592034a17892a25c6fe44eec3cf8d1f(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(lucide-react@0.562.0(react@19.2.3))(next-themes@0.4.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(next@16.2.12(@babel/core@7.29.7)(@types/node@20.19.43)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(recharts@3.10.1(@types/react@19.2.18)(react-dom@19.2.3(react@19.2.3))(react-is@16.13.1)(react@19.2.3)(redux@5.0.1))
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -176,9 +176,9 @@ packages:
     resolution: {integrity: sha512-Vj1jF3cPfxg7OAfoI7QnVKLoILlm2JF9pnVHrX8qx7AHMiYWT+NDAA7jChlNgRS4WTLc/fD1lXLmPixluj+3Gg==}
     engines: {node: '>=6.9.0'}
 
-  '@bitfinitechain/brandkit@https://codeload.github.com/bitfinitechain/Brandkit/tar.gz/95018b210ff3ec016ede1e3b2f798719e442e0c0':
-    resolution: {gitHosted: true, tarball: https://codeload.github.com/bitfinitechain/Brandkit/tar.gz/95018b210ff3ec016ede1e3b2f798719e442e0c0}
-    version: 1.15.0
+  '@bitfinitechain/brandkit@https://codeload.github.com/bitfinitechain/Brandkit/tar.gz/07c1d007b592034a17892a25c6fe44eec3cf8d1f':
+    resolution: {gitHosted: true, tarball: https://codeload.github.com/bitfinitechain/Brandkit/tar.gz/07c1d007b592034a17892a25c6fe44eec3cf8d1f}
+    version: 1.16.0
     peerDependencies:
       lucide-react: '>=0.400.0'
       next: '>=15.0.0'
@@ -3363,7 +3363,7 @@ snapshots:
       '@babel/helper-string-parser': 7.29.7
       '@babel/helper-validator-identifier': 7.29.7
 
-  '@bitfinitechain/brandkit@https://codeload.github.com/bitfinitechain/Brandkit/tar.gz/95018b210ff3ec016ede1e3b2f798719e442e0c0(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(lucide-react@0.562.0(react@19.2.3))(next-themes@0.4.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(next@16.2.12(@babel/core@7.29.7)(@types/node@20.19.43)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(recharts@3.10.1(@types/react@19.2.18)(react-dom@19.2.3(react@19.2.3))(react-is@16.13.1)(react@19.2.3)(redux@5.0.1))':
+  '@bitfinitechain/brandkit@https://codeload.github.com/bitfinitechain/Brandkit/tar.gz/07c1d007b592034a17892a25c6fe44eec3cf8d1f(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(lucide-react@0.562.0(react@19.2.3))(next-themes@0.4.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(next@16.2.12(@babel/core@7.29.7)(@types/node@20.19.43)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(recharts@3.10.1(@types/react@19.2.18)(react-dom@19.2.3(react@19.2.3))(react-is@16.13.1)(react@19.2.3)(redux@5.0.1))':
     dependencies:
       '@radix-ui/react-accordion': 1.2.20(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@radix-ui/react-alert-dialog': 1.1.23(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)

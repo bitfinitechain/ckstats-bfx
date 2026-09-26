@@ -49,6 +49,11 @@
   --secondary-foreground: var(--bfx-zinc-950);
 
   --muted: var(--bfx-zinc-100);   /* was #f4f4f5 — the same colour, spelled off-palette */
+  /* The groove a control's value sits in: progress, slider, switch. A CONTRACT
+     name as of Brandkit v1.16.0, because shadcn has no word for it and three
+     shared components needed one. Analytics derives its own; here it is the
+     same neutral the border uses. */
+  --track: var(--bfx-zinc-300);
   --muted-foreground: var(--bfx-zinc-550);
 
   --accent: var(--bfx-zinc-100);
@@ -93,6 +98,7 @@
   --secondary-foreground: var(--bfx-zinc-50);
 
   --muted: var(--bfx-zinc-800);
+  --track: var(--bfx-zinc-800);
   --muted-foreground: var(--bfx-zinc-400);
 
   --accent: var(--bfx-zinc-800);
@@ -126,6 +132,7 @@
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
   --color-muted: var(--muted);
+  --color-track: var(--track);
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
